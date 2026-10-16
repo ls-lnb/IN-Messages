@@ -49,6 +49,7 @@ const val CUSTOM_NOTIFICATIONS = "custom_notifications"
 const val IS_LAUNCHED_FROM_SHORTCUT = "is_launched_from_shortcut"
 const val KEEP_CONVERSATIONS_ARCHIVED = "keep_conversations_archived"
 const val SENDER_GROUPS = "sender_groups"
+const val ADD_TO_GROUP_SORT_ORDER = "add_to_group_sort_order"
 const val PRESELECTED_SENDER_ADDRESSES = "preselected_sender_addresses"
 const val SIMILAR_SEED_ADDRESS = "similar_seed_address"
 const val LAST_APP_UPDATE_TIME = "last_app_update_time"
@@ -79,6 +80,10 @@ const val ATTACHMENT_VCARD = 9
 const val LOCK_SCREEN_SENDER_MESSAGE = 1
 const val LOCK_SCREEN_SENDER = 2
 const val LOCK_SCREEN_NOTHING = 3
+
+// sorting of the group list in the "add to group" dialog
+const val SORT_GROUPS_BY_RECENT = 0
+const val SORT_GROUPS_ALPHABETICALLY = 1
 
 const val FILE_SIZE_NONE = -1L
 const val FILE_SIZE_100_KB = 102_400L
