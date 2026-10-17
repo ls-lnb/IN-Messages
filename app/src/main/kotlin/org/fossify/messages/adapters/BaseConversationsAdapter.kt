@@ -171,7 +171,7 @@ abstract class BaseConversationsAdapter(
 
             conversationAddress.apply {
                 text = conversation.title
-                setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * 1.2f)
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * LIST_TITLE_TEXT_RATIO)
             }
 
             conversationBodyShort.apply {
@@ -260,5 +260,11 @@ abstract class BaseConversationsAdapter(
 
     companion object {
         private const val MAX_UNREAD_BADGE_COUNT = 99
+
+        /**
+         * The conversation list uses a much bigger title than the rest of the app, which makes
+         * it look oversized compared to the message text (which uses the base size as is).
+         */
+        private const val LIST_TITLE_TEXT_RATIO = 1.05f
     }
 }

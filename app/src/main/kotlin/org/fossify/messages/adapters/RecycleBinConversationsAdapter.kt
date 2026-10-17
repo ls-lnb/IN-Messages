@@ -2,13 +2,13 @@ package org.fossify.messages.adapters
 
 import android.view.Menu
 import org.fossify.commons.dialogs.ConfirmationDialog
-import org.fossify.commons.extensions.notificationManager
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.commons.views.MyRecyclerView
 import org.fossify.messages.R
 import org.fossify.messages.activities.SimpleActivity
 import org.fossify.messages.extensions.deleteConversation
 import org.fossify.messages.extensions.restoreAllMessagesFromRecycleBinForConversation
+import org.fossify.messages.helpers.cancelNotificationsFor
 import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.models.Conversation
 
@@ -53,7 +53,7 @@ class RecycleBinConversationsAdapter(
         val conversationsToRemove = currentList.filter { selectedKeys.contains(it.hashCode()) } as ArrayList<Conversation>
         conversationsToRemove.forEach {
             activity.deleteConversation(it.threadId)
-            activity.notificationManager.cancel(it.threadId.hashCode())
+            activity.cancelNotificationsFor(it.threadId, it.phoneNumber)
         }
 
         removeConversationsFromList(conversationsToRemove)

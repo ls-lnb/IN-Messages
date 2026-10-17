@@ -10,7 +10,6 @@ import org.fossify.commons.extensions.addLockedLabelIfNeeded
 import org.fossify.commons.extensions.copyToClipboard
 import org.fossify.commons.extensions.isOrWasThankYouInstalled
 import org.fossify.commons.extensions.launchActivityIntent
-import org.fossify.commons.extensions.notificationManager
 import org.fossify.commons.helpers.KEY_PHONE
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.commons.views.MyRecyclerView
@@ -29,6 +28,7 @@ import org.fossify.messages.extensions.markThreadMessagesUnread
 import org.fossify.messages.extensions.removeSenderGroupsForConversations
 import org.fossify.messages.extensions.renameConversation
 import org.fossify.messages.extensions.updateConversationArchivedStatus
+import org.fossify.messages.helpers.cancelNotificationsFor
 import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.helpers.requestTelephonySyncProgress
 import org.fossify.messages.messaging.isShortCodeWithLetters
@@ -192,7 +192,7 @@ class ConversationsAdapter(
             currentList.filter { selectedKeys.contains(it.hashCode()) } as ArrayList<Conversation>
         conversationsToRemove.forEach {
             activity.updateConversationArchivedStatus(it.threadId, true)
-            activity.notificationManager.cancel(it.threadId.hashCode())
+            activity.cancelNotificationsFor(it.threadId, it.phoneNumber)
         }
 
         val newList = try {
@@ -223,7 +223,7 @@ class ConversationsAdapter(
             currentList.filter { selectedKeys.contains(it.hashCode()) } as ArrayList<Conversation>
         conversationsToRemove.forEach {
             activity.deleteConversation(it.threadId)
-            activity.notificationManager.cancel(it.threadId.hashCode())
+            activity.cancelNotificationsFor(it.threadId, it.phoneNumber)
         }
 
         val newList = try {
@@ -300,6 +300,9 @@ class ConversationsAdapter(
         val conversationsMarkedAsRead =
             currentList.filter { selectedKeys.contains(it.hashCode()) } as ArrayList<Conversation>
         ensureBackgroundThread {
+            conversationsMarkedAsRead.forEach {
+                activity.cancelNotificationsFor(it.threadId, it.phoneNumber)
+            }
             conversationsMarkedAsRead.filter { conversation -> !conversation.read }.forEach {
                 activity.markThreadMessagesRead(it.threadId)
             }

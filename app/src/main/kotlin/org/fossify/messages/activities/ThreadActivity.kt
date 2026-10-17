@@ -30,12 +30,16 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.OvershootInterpolator
 import android.view.inputmethod.EditorInfo
+import android.widget.ArrayAdapter
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
@@ -82,7 +86,6 @@ import org.fossify.commons.extensions.isVisible
 import org.fossify.commons.extensions.launchActivityIntent
 import org.fossify.commons.extensions.maybeShowNumberPickerDialog
 import org.fossify.commons.extensions.normalizeString
-import org.fossify.commons.extensions.notificationManager
 import org.fossify.commons.extensions.onTextChangeListener
 import org.fossify.commons.extensions.openRequestExactAlarmSettings
 import org.fossify.commons.extensions.realScreenSize
@@ -179,16 +182,20 @@ import org.fossify.messages.helpers.PICK_SAVE_DIR_INTENT
 import org.fossify.messages.helpers.PICK_SAVE_FILE_INTENT
 import org.fossify.messages.helpers.PICK_VIDEO_INTENT
 import org.fossify.messages.helpers.SEARCHED_MESSAGE_ID
+import org.fossify.messages.helpers.SORT_GROUPS_ALPHABETICALLY
+import org.fossify.messages.helpers.SORT_GROUPS_BY_RECENT
 import org.fossify.messages.helpers.THREAD_ATTACHMENT_URI
 import org.fossify.messages.helpers.THREAD_ATTACHMENT_URIS
 import org.fossify.messages.helpers.THREAD_ID
 import org.fossify.messages.helpers.THREAD_NUMBER
 import org.fossify.messages.helpers.THREAD_TEXT
 import org.fossify.messages.helpers.THREAD_TITLE
+import org.fossify.messages.helpers.cancelNotificationsFor
 import org.fossify.messages.helpers.generateRandomId
 import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.helpers.requestTelephonySyncProgress
 import org.fossify.messages.helpers.refreshMessages
+import org.fossify.messages.helpers.sortSenderGroupsForPicker
 import org.fossify.messages.messaging.cancelScheduleSendPendingIntent
 import org.fossify.messages.messaging.isLongMmsMessage
 import org.fossify.messages.messaging.isShortCodeWithLetters
@@ -200,6 +207,7 @@ import org.fossify.messages.models.Conversation
 import org.fossify.messages.models.Events
 import org.fossify.messages.models.Message
 import org.fossify.messages.models.MessageAttachment
+import org.fossify.messages.models.SenderGroup
 import org.fossify.messages.models.SIMCard
 import org.fossify.messages.models.ThreadItem
 import org.fossify.messages.models.ThreadItem.ThreadDateTime
@@ -301,7 +309,7 @@ class ThreadActivity : SimpleActivity() {
 
         isActivityVisible = true
 
-        notificationManager.cancel(threadId.hashCode())
+        cancelNotificationsFor(threadId, conversation?.phoneNumber)
 
         ensureBackgroundThread {
             val newConv = conversationsDB.getConversationWithThreadId(threadId)
@@ -310,6 +318,8 @@ class ThreadActivity : SimpleActivity() {
                 runOnUiThread {
                     setupThreadTitle()
                 }
+                // resolve the group by address now that the conversation is loaded
+                cancelNotificationsFor(threadId, newConv.phoneNumber)
             }
 
             val smsDraft = getSmsDraft(threadId)
@@ -1240,7 +1250,8 @@ class ThreadActivity : SimpleActivity() {
     }
 
     private fun setupThreadTitle() {
-        val title = conversation?.title
+        val groupTitle = conversation?.let { config.findSenderGroupByAddress(it.phoneNumber)?.title }
+        val title = groupTitle ?: conversation?.title
         binding.threadToolbar.title = if (!title.isNullOrEmpty()) {
             title
         } else {
@@ -1507,31 +1518,102 @@ class ThreadActivity : SimpleActivity() {
             return
         }
 
-        val titles = senderGroups.map { it.title }.toTypedArray()
-        getAlertDialogBuilder()
-            .setTitle(R.string.add_to_group)
-            .setItems(titles) { _, which ->
-                val group = senderGroups[which]
-                ensureBackgroundThread {
-                    saveSenderGroupFromSelection(
-                        addresses = group.addresses + address,
-                        title = group.title,
-                        preferredGroupId = group.id,
-                    )
-                    runOnUiThread {
-                        toast(getString(R.string.added_to_group, group.title))
-                        refreshConversations(cacheOnly = true)
-                        refreshMenuItems()
-                    }
+        ensureBackgroundThread {
+            val datesByAddress = conversationsDB.getNonArchived()
+                .associate { it.phoneNumber.uppercase() to it.date.toLong() }
+            runOnUiThread { showAddToGroupDialog(address, senderGroups, datesByAddress) }
+        }
+    }
+
+    private fun showAddToGroupDialog(
+        address: String,
+        senderGroups: List<SenderGroup>,
+        datesByAddress: Map<String, Long>,
+    ) {
+        val textColor = getProperTextColor()
+        val primaryColor = getProperPrimaryColor()
+        val header = layoutInflater.inflate(R.layout.dialog_add_to_group_header, null) as ViewGroup
+        header.findViewById<TextView>(R.id.add_to_group_title).setTextColor(textColor)
+        val sortToggle = header.findViewById<ViewGroup>(R.id.add_to_group_sort_toggle)
+        val sortLabel = header.findViewById<TextView>(R.id.add_to_group_sort_label)
+        sortLabel.setTextColor(primaryColor)
+        header.findViewById<ImageView>(R.id.add_to_group_sort_icon).applyColorFilter(primaryColor)
+
+        var sortedGroups = sortSenderGroupsForPicker(
+            senderGroups,
+            datesByAddress,
+            isAddToGroupSortedByRecency()
+        )
+        val adapter = object : ArrayAdapter<String>(
+            this,
+            R.layout.dialog_add_to_group_item,
+            sortedGroups.map { it.title }
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView
+                    ?: layoutInflater.inflate(R.layout.dialog_add_to_group_item, parent, false)
+                (view as TextView).apply {
+                    text = getItem(position)
+                    setTextColor(textColor)
                 }
+                return view
             }
+        }
+
+        fun updateSortToggle() {
+            sortLabel.text = getString(
+                if (isAddToGroupSortedByRecency()) R.string.sort_by_most_recent else R.string.sort_alphabetically
+            )
+        }
+        updateSortToggle()
+
+        sortToggle.setOnClickListener {
+            config.addToGroupSortOrder = if (isAddToGroupSortedByRecency()) {
+                SORT_GROUPS_ALPHABETICALLY
+            } else {
+                SORT_GROUPS_BY_RECENT
+            }
+            sortedGroups = sortSenderGroupsForPicker(
+                senderGroups,
+                datesByAddress,
+                isAddToGroupSortedByRecency()
+            )
+            adapter.clear()
+            adapter.addAll(sortedGroups.map { it.title })
+            updateSortToggle()
+        }
+
+        getAlertDialogBuilder()
+            .setCustomTitle(header)
+            .setAdapter(adapter) { _, which -> addConversationToGroup(address, sortedGroups[which]) }
+            .setNegativeButton(org.fossify.commons.R.string.cancel, null)
             .show()
+    }
+
+    private fun isAddToGroupSortedByRecency(): Boolean {
+        return config.addToGroupSortOrder == SORT_GROUPS_BY_RECENT
+    }
+
+    private fun addConversationToGroup(address: String, group: SenderGroup) {
+        ensureBackgroundThread {
+            saveSenderGroupFromSelection(
+                addresses = group.addresses + address,
+                title = group.title,
+                preferredGroupId = group.id,
+            )
+            runOnUiThread {
+                toast(getString(R.string.added_to_group, group.title))
+                refreshConversations(cacheOnly = true)
+                refreshMenuItems()
+            }
+        }
     }
 
     private fun askConfirmUngroupSenders() {
         val currentConversation = conversation ?: return
         ConfirmationDialog(this, getString(R.string.ungroup_senders_confirmation)) {
             ensureBackgroundThread {
+                cancelNotificationsFor(currentConversation.threadId)
                 removeSenderGroupsForConversations(listOf(currentConversation))
                 runOnUiThread {
                     refreshConversations(cacheOnly = true)
@@ -2095,7 +2177,7 @@ class ThreadActivity : SimpleActivity() {
         allMessagesFetched = false
 
         if (isActivityVisible) {
-            notificationManager.cancel(threadId.hashCode())
+            cancelNotificationsFor(threadId, conversation?.phoneNumber)
         }
 
         val messageSnapshot = messages.toSortedMessages()

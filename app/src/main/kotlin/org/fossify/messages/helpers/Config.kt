@@ -57,6 +57,11 @@ class Config(context: Context) : BaseConfig(context) {
         set(lockScreenVisibilitySetting) = prefs.edit()
             .putInt(LOCK_SCREEN_VISIBILITY, lockScreenVisibilitySetting).apply()
 
+    var addToGroupSortOrder: Int
+        get() = prefs.getInt(ADD_TO_GROUP_SORT_ORDER, SORT_GROUPS_BY_RECENT)
+        set(addToGroupSortOrder) = prefs.edit()
+            .putInt(ADD_TO_GROUP_SORT_ORDER, addToGroupSortOrder).apply()
+
     var mmsFileSizeLimit: Long
         get() = prefs.getLong(MMS_FILE_SIZE_LIMIT, FILE_SIZE_200_KB)
         set(mmsFileSizeLimit) = prefs.edit().putLong(MMS_FILE_SIZE_LIMIT, mmsFileSizeLimit).apply()

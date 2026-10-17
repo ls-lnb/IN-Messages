@@ -42,6 +42,8 @@
     <string name="edit_grouped_senders">Edit grouped senders</string>
     <string name="add_to_group">Add to group</string>
     <string name="added_to_group">Added to %s</string>
+    <string name="sort_alphabetically">A-Z</string>
+    <string name="sort_by_most_recent">Recent</string>
     <string name="search_senders">Search senders</string>
     <string name="no_short_code_senders">No short-code senders found</string>
     <string name="sender_group_saved">Group saved</string>

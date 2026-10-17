@@ -15,6 +15,9 @@ object SenderGrouping {
     @Volatile
     private var relatedThreadIds: Map<Long, List<Long>> = emptyMap()
 
+    @Volatile
+    private var groupIds: Map<Long, String> = emptyMap()
+
     fun updateGroups(groups: Collection<List<Long>>) {
         val map = HashMap<Long, List<Long>>(groups.size * 2)
         for (group in groups) {
@@ -37,7 +40,16 @@ object SenderGrouping {
         return relatedThreadIds.containsKey(threadId)
     }
 
-    fun mergeGroup(ids: List<Long>) {
+    /** Remembers which sender group each thread id belongs to, for notification cancellation. */
+    fun updateGroupIds(threadIdToGroupId: Map<Long, String>) {
+        groupIds = HashMap(threadIdToGroupId)
+    }
+
+    fun groupIdForThread(threadId: Long): String? {
+        return groupIds[threadId]
+    }
+
+    fun mergeGroup(ids: List<Long>, groupId: String? = null) {
         val distinct = ids.distinct()
         if (distinct.isEmpty()) {
             return
@@ -47,5 +59,13 @@ object SenderGrouping {
             map[id] = distinct
         }
         relatedThreadIds = map
+
+        if (groupId != null) {
+            val idsMap = HashMap(groupIds)
+            for (id in distinct) {
+                idsMap[id] = groupId
+            }
+            groupIds = idsMap
+        }
     }
 }
