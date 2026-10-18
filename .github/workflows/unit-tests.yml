@@ -4,23 +4,22 @@ name: Unit tests
 # rules, OtpCorpusTest replays the 375 message corpus in app/src/test/resources/otp-corpus.tsv
 # (sourced from three public corpora plus real messages), so a detector change that regresses any
 # of those messages fails here instead of shipping.
+#
+# Runs on pull requests to main and on demand only: pushes to main are already covered, because the
+# release workflow runs these same tests before building the APK.
 on:
-  push:
-    branches: [ develop, main ]
-    paths-ignore:
-      - "**.md"
-      - ".github/**"
-      - "docs/**"
-      - "fastlane/**"
-      - "LICENSE"
   pull_request:
-    branches: [ develop, main ]
+    branches: [ main ]
     paths-ignore:
       - "**.md"
       - "docs/**"
       - "fastlane/**"
       - "LICENSE"
   workflow_dispatch:
+
+concurrency:
+  group: unit-tests-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
