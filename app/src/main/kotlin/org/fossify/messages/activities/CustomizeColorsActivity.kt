@@ -43,7 +43,7 @@ class CustomizeColorsActivity : SimpleActivity() {
     private val iconSwitcher by lazy { AppIconSwitcher(this) }
 
     private companion object {
-        const val DISABLED_ROW_ALPHA = 0.4f
+        const val DISABLED_ROW_ALPHA = 0.6f
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

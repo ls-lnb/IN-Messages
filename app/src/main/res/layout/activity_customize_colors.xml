@@ -50,7 +50,7 @@
 
             </RelativeLayout>
 
-            <TextView
+            <org.fossify.commons.views.MyTextView
                 android:id="@+id/colors_system_theme_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -188,7 +188,7 @@
 
             </RelativeLayout>
 
-            <TextView
+            <org.fossify.commons.views.MyTextView
                 android:id="@+id/colors_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
