@@ -25,14 +25,6 @@ const val OTP_KEYWORDS = "otp_keywords"
 
 /** commons' sideloading check stores 2 once it has verified a build. */
 const val APP_SIDELOADING_STATUS_OK = 2
-
-/**
- * Extras commons' customization screen reads. Its own launcher,
- * BaseSimpleActivity.startCustomizationActivity(), silently returns unless the package name
- * contains "fossify", so this fork starts the screen itself.
- */
-const val APP_ICON_IDS = "app_icon_ids"
-const val APP_LAUNCHER_NAME = "app_launcher_name"
 const val ENABLE_DELIVERY_REPORTS = "enable_delivery_reports"
 const val SEND_LONG_MESSAGE_MMS = "send_long_message_mms"
 const val SEND_GROUP_MESSAGE_MMS = "send_group_message_mms"

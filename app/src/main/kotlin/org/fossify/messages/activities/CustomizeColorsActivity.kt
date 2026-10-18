@@ -3,6 +3,7 @@ package org.fossify.messages.activities
 import android.os.Bundle
 import org.fossify.commons.dialogs.ColorPickerDialog
 import org.fossify.commons.extensions.getProperBackgroundColor
+import org.fossify.commons.extensions.checkAppIconColor
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.updateTextColors
@@ -42,6 +43,14 @@ class CustomizeColorsActivity : SimpleActivity() {
         binding.colorsBackgroundHolder.setOnClickListener {
             pickColor(config.backgroundColor, getProperBackgroundColor()) { config.backgroundColor = it }
         }
+        binding.colorsIconHolder.setOnClickListener {
+            pickColor(config.appIconColor, getProperPrimaryColor()) {
+                config.appIconColor = it
+                // commons switches the launcher aliases and falls back to the default icon when the
+                // colour has no matching alias
+                checkAppIconColor()
+            }
+        }
     }
 
     override fun onResume() {
@@ -56,6 +65,8 @@ class CustomizeColorsActivity : SimpleActivity() {
                 config.primaryColor = 0
                 config.textColor = 0
                 config.backgroundColor = 0
+                config.appIconColor = 0
+                checkAppIconColor()
                 updateColors()
                 true
             } else {
@@ -86,5 +97,7 @@ class CustomizeColorsActivity : SimpleActivity() {
         binding.colorsPrimarySwatch.setColorFilter(getProperPrimaryColor())
         binding.colorsTextSwatch.setColorFilter(getProperTextColor())
         binding.colorsBackgroundSwatch.setColorFilter(getProperBackgroundColor())
+        val iconColor = if (config.appIconColor == 0) getProperPrimaryColor() else config.appIconColor
+        binding.colorsIconSwatch.setColorFilter(iconColor)
     }
 }
