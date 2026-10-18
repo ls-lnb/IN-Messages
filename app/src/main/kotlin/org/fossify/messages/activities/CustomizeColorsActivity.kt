@@ -11,6 +11,7 @@ import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.NavigationIcon
 import org.fossify.messages.R
+import org.fossify.commons.extensions.toast
 import org.fossify.messages.dialogs.AppColorPickerDialog
 import org.fossify.messages.databinding.ActivityCustomizeColorsBinding
 import org.fossify.messages.extensions.config
@@ -57,17 +58,19 @@ class CustomizeColorsActivity : SimpleActivity() {
         }
         binding.colorsIconHolder.setOnClickListener {
             // one strip and no shades: only the launcher's own colours are valid
-            AppColorPickerDialog(
-                this,
-                currentIconVariant().color,
-                appIconVariants.map { it.color },
-                iconPreview = variantIconDrawable(),
-                showShades = false
-            ) { wasPositive, color ->
-                if (wasPositive) {
-                    applyIconVariant(closestIconVariant(color))
+            runCatching {
+                AppColorPickerDialog(
+                    this,
+                    currentIconVariant().color,
+                    appIconVariants.map { it.color },
+                    iconPreview = variantIconDrawable(),
+                    showShades = false
+                ) { wasPositive, color ->
+                    if (wasPositive) {
+                        applyIconVariant(closestIconVariant(color))
+                    }
                 }
-            }
+            }.onFailure { toast("Icon picker failed: $it") }
         }
     }
 
@@ -95,18 +98,20 @@ class CustomizeColorsActivity : SimpleActivity() {
     /** [current] is 0 while the default is in use, in which case the dialog opens on [shown]. */
     private fun pickColor(current: Int, shown: Int, apply: (Int) -> Unit) {
         val initialColor = if (current == 0) shown else current
-        AppColorPickerDialog(
-            this,
-            initialColor,
-            appColorPalette,
-            iconPreview = null,
-            showShades = true
-        ) { wasPositive, newColor ->
-            if (wasPositive) {
-                apply(newColor)
-                updateColors()
+        runCatching {
+            AppColorPickerDialog(
+                this,
+                initialColor,
+                appColorPalette,
+                iconPreview = null,
+                showShades = true
+            ) { wasPositive, newColor ->
+                if (wasPositive) {
+                    apply(newColor)
+                    updateColors()
+                }
             }
-        }
+        }.onFailure { toast("Colour picker failed: $it") }
     }
 
     private fun updateColors() {
