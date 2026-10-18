@@ -4,11 +4,13 @@
 
 This is a fork of [Fossify Messages](https://github.com/FossifyOrg/Messages), the privacy-focused, open-source SMS/MMS app: no ads, no internet permission for SMS, material design with dark theme, message blocking, SMS/MMS backup and restore, and efficient search. For everything about the base app, see the [Fossify Messages README](https://github.com/FossifyOrg/Messages#readme).
 
-## What this fork adds
-
-It is built particularly for Indian users and the way messages arrive here: banks, cards, brokers, wallets, deliveries and utilities each write from their own short code, so a day's inbox is a wall of near-identical alerts. On top of everything the base app does, this fork adds **sender grouping**, **one time password handling** and **colour customisation** for exactly that clutter.
+It is built particularly for Indian users and the way messages arrive here: banks, cards, brokers, wallets, deliveries and utilities each write from their own short code, so a day's inbox is a wall of near-identical alerts.
 
 It installs as **IN Messages** (`com.blinkingblue.inmessages`), so it can sit alongside the original app.
+
+## What this fork adds
+
+All of the base app's features, plus **sender grouping**, **one time password handling** and **colour customisation** for exactly that short-code clutter.
 
 ### Sender grouping
 
