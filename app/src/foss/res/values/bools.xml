@@ -2,5 +2,11 @@
 <resources>
     <bool name="show_donate_in_about">true</bool>
     <bool name="hide_google_relations">true</bool>
-    <bool name="pretend_thank_you_installed">true</bool>
+    <!--
+  False on purpose: while commons believes the Thank You app is installed it saves the
+  customization theme through the shared global settings provider, which needs a signature
+  permission only that app holds, so every save throws and toasts an error. The features this
+  fork needs are unlocked in code instead.
+-->
+    <bool name="pretend_thank_you_installed">false</bool>
 </resources>

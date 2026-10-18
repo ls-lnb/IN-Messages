@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-      This fork ships every feature. Commons gates a few (customization, blocked numbers,
-      blocked keywords, blocking a conversation) behind the "Fossify Thank You" app, and
-      this is the switch it provides to pretend that app is installed.
+      Kept false on purpose. Commons gates a few features behind the "Fossify Thank You" app, and
+      pretending it is installed looks like the easy way out, but it makes commons' customization
+      screen save the theme through the shared global-settings provider - which needs a signature
+      permission only the real Thank You app holds - so every save throws and the error toast
+      reappears on each screen. The features this app needs are unlocked in code instead.
     -->
-    <bool name="pretend_thank_you_installed">true</bool>
+    <bool name="pretend_thank_you_installed">false</bool>
 </resources>
