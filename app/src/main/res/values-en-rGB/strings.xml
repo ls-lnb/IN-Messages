@@ -20,4 +20,6 @@
     <string name="follow_system_colors_hint">Colours come from your wallpaper through the system theme. Turn this off to pick the colours below.</string>
     <string name="reset_colors">Reset colours</string>
     <string name="app_icon_color">App icon colour</string>
+    <string name="text_color_matched_to_background">Text colour matched the background so it stays readable</string>
+    <string name="background_color_matched_to_text">Background colour matched the text so it stays readable</string>
 </resources>

@@ -39,3 +39,18 @@ fun colorDistance(first: Int, second: Int): Int {
     val blue = Color.blue(first) - Color.blue(second)
     return red * red + green * green + blue * blue
 }
+
+/** True when [color] is bright enough that dark text belongs on it. */
+fun isLightColor(color: Int): Boolean {
+    return Color.luminance(color) > LIGHT_COLOR_LUMINANCE
+}
+
+/** Rough contrast ratio between two colours, used to notice a pair that would be hard to read. */
+fun contrastRatio(first: Int, second: Int): Double {
+    val lighter = maxOf(Color.luminance(first), Color.luminance(second))
+    val darker = minOf(Color.luminance(first), Color.luminance(second))
+    return (lighter + CONTRAST_OFFSET) / (darker + CONTRAST_OFFSET)
+}
+
+private const val LIGHT_COLOR_LUMINANCE = 0.5
+private const val CONTRAST_OFFSET = 0.05

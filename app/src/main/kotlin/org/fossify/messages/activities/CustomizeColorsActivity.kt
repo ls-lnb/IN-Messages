@@ -19,6 +19,8 @@ import org.fossify.messages.extensions.config
 import org.fossify.messages.helpers.appColorPalette
 import org.fossify.messages.helpers.AppIconSwitcher
 import org.fossify.messages.helpers.appIconVariants
+import org.fossify.messages.helpers.contrastRatio
+import org.fossify.messages.helpers.isLightColor
 
 /**
  * Colour customization owned by this fork. Commons only offers these rows when its Thank You app
@@ -44,6 +46,7 @@ class CustomizeColorsActivity : SimpleActivity() {
 
     private companion object {
         const val DISABLED_ROW_ALPHA = 0.6f
+        const val MIN_READABLE_CONTRAST = 3.0
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,10 +65,16 @@ class CustomizeColorsActivity : SimpleActivity() {
             pickColor(config.primaryColor, getProperPrimaryColor()) { config.primaryColor = it }
         }
         binding.colorsTextHolder.setOnClickListener {
-            pickColor(config.textColor, getProperTextColor()) { config.textColor = it }
+            pickColor(config.textColor, getProperTextColor()) {
+                config.textColor = it
+                keepPairReadable(pickedBackground = false)
+            }
         }
         binding.colorsBackgroundHolder.setOnClickListener {
-            pickColor(config.backgroundColor, getProperBackgroundColor()) { config.backgroundColor = it }
+            pickColor(config.backgroundColor, getProperBackgroundColor()) {
+                config.backgroundColor = it
+                keepPairReadable(pickedBackground = true)
+            }
         }
         binding.colorsIconHolder.setOnClickListener {
             // one strip and no shades: only the launcher's own colours are valid
@@ -100,7 +109,7 @@ class CustomizeColorsActivity : SimpleActivity() {
      */
     private fun resetColors() {
         applyDefaultColors()
-        updateColors()
+        recreate()
     }
 
     private fun applyDefaultColors() {
@@ -147,14 +156,41 @@ class CustomizeColorsActivity : SimpleActivity() {
             ) { wasPositive, newColor ->
                 if (wasPositive) {
                     apply(newColor)
-                    updateColors()
+                    recreate()
                 }
             }
         }.onFailure { toast("Colour picker failed: $it") }
     }
 
+    /**
+     * A pick can leave the text and background too close to read, which is easy to do here: the
+     * stock dark text is nearly white. Only in that case is the other colour matched to the one
+     * that was picked, so a background choice turns the app light or dark as expected.
+     */
+    private fun keepPairReadable(pickedBackground: Boolean) {
+        if (contrastRatio(config.textColor, config.backgroundColor) >= MIN_READABLE_CONTRAST) {
+            return
+        }
+
+        if (pickedBackground) {
+            config.textColor = if (isLightColor(config.backgroundColor)) {
+                defaultColor(org.fossify.commons.R.color.dark_grey)
+            } else {
+                defaultColor(org.fossify.commons.R.color.theme_dark_text_color)
+            }
+            toast(R.string.text_color_matched_to_background)
+        } else {
+            config.backgroundColor = if (isLightColor(config.textColor)) {
+                defaultColor(org.fossify.commons.R.color.theme_dark_background_color)
+            } else {
+                defaultColor(org.fossify.commons.R.color.theme_light_background_color)
+            }
+            toast(R.string.background_color_matched_to_text)
+        }
+    }
+
     private fun updateColors() {
-        updateTextColors(binding.colorsHolder)
+        updateTextColors(binding.colorsCoordinator)
         binding.colorsSystemTheme.isChecked = config.isSystemThemeEnabled
         binding.colorsSystemThemeHint.beVisibleIf(config.isSystemThemeEnabled)
         binding.colorsPrimarySwatch.setColorFilter(getProperPrimaryColor())
