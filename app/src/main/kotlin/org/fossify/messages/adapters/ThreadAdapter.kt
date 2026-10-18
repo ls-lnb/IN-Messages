@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.graphics.drawable.toDrawable
@@ -39,6 +40,8 @@ import org.fossify.commons.extensions.copyToClipboard
 import org.fossify.commons.extensions.copyToClipboard
 import org.fossify.commons.extensions.formatDateOrTime
 import org.fossify.commons.extensions.getAlertDialogBuilder
+import org.fossify.commons.extensions.getProperPrimaryColor
+import org.fossify.commons.extensions.setupDialogStuff
 import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getTextSize
@@ -55,6 +58,7 @@ import org.fossify.messages.activities.NewConversationActivity
 import org.fossify.messages.activities.SimpleActivity
 import org.fossify.messages.activities.ThreadActivity
 import org.fossify.messages.activities.VCardViewerActivity
+import org.fossify.messages.databinding.DialogOtpCodeBinding
 import org.fossify.messages.databinding.ItemAttachmentDocumentBinding
 import org.fossify.messages.databinding.ItemAttachmentImageBinding
 import org.fossify.messages.databinding.ItemAttachmentVcardBinding
@@ -378,7 +382,7 @@ class ThreadAdapter(
             }
 
             setOnLongClickListener {
-                if (!showOtpMenuIfClicked(this, otpCode, otpStart, lastTouchX, lastTouchY)) {
+                if (!showOtpDialogIfClicked(this, otpCode, otpStart, lastTouchX, lastTouchY)) {
                     holder.viewLongClicked()
                 }
                 true
@@ -398,10 +402,10 @@ class ThreadAdapter(
     }
 
     /**
-     * Shows a "copy code" menu when the long press landed on the underlined code, otherwise
-     * lets the caller fall back to the regular long click.
+     * Shows the code with a copy button when the long press landed on the underlined code,
+     * otherwise lets the caller fall back to the regular long click.
      */
-    private fun showOtpMenuIfClicked(
+    private fun showOtpDialogIfClicked(
         textView: TextView,
         otpCode: String?,
         otpStart: Int,
@@ -415,12 +419,24 @@ class ThreadAdapter(
             return false
         }
 
-        activity.getAlertDialogBuilder()
-            .setTitle(activity.getString(R.string.otp_code, otpCode))
-            .setItems(arrayOf(activity.getString(R.string.copy_otp_code))) { _, _ ->
+        val binding = DialogOtpCodeBinding.inflate(activity.layoutInflater)
+        var otpDialog: AlertDialog? = null
+        val primaryColor = activity.getProperPrimaryColor()
+        binding.otpDialogCode.apply {
+            text = activity.getString(R.string.otp_code, otpCode)
+            setTextColor(primaryColor)
+        }
+        binding.otpDialogCopy.apply {
+            applyColorFilter(primaryColor)
+            setOnClickListener {
                 activity.copyToClipboard(otpCode)
+                otpDialog?.dismiss()
             }
-            .show()
+        }
+
+        activity.getAlertDialogBuilder().apply {
+            activity.setupDialogStuff(binding.root, this) { dialog -> otpDialog = dialog }
+        }
         return true
     }
 
