@@ -9,7 +9,9 @@ import org.fossify.commons.FossifyApp
 import org.fossify.commons.extensions.hasPermission
 import org.fossify.commons.helpers.PERMISSION_READ_CONTACTS
 import org.fossify.commons.helpers.ensureBackgroundThread
+import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.rescheduleAllScheduledMessages
+import org.fossify.messages.helpers.APP_SIDELOADING_STATUS_OK
 import org.fossify.messages.helpers.MessagingCache
 
 class App : FossifyApp() {
@@ -17,6 +19,10 @@ class App : FossifyApp() {
 
     override fun onCreate() {
         super.onCreate()
+        // This fork is not Fossify's signed build, so commons' canary check would report it as a
+        // corrupt version and send the user to Fossify's download page. Marking the build as
+        // verified short-circuits that check, in the splash screen and everywhere else.
+        config.appSideloadingStatus = APP_SIDELOADING_STATUS_OK
         if (hasPermission(PERMISSION_READ_CONTACTS)) {
             listOf(
                 ContactsContract.Contacts.CONTENT_URI,

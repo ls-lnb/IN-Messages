@@ -22,6 +22,9 @@ const val SEND_ON_ENTER = "send_on_enter"
 const val LOCK_SCREEN_VISIBILITY = "lock_screen_visibility"
 const val OTP_DETECTION = "otp_detection"
 const val OTP_KEYWORDS = "otp_keywords"
+
+/** commons' sideloading check stores 2 once it has verified a build. */
+const val APP_SIDELOADING_STATUS_OK = 2
 const val ENABLE_DELIVERY_REPORTS = "enable_delivery_reports"
 const val SEND_LONG_MESSAGE_MMS = "send_long_message_mms"
 const val SEND_GROUP_MESSAGE_MMS = "send_group_message_mms"

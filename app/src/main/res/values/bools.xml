@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      This fork ships every feature. Commons gates a few (customization, blocked numbers,
+      blocked keywords, blocking a conversation) behind the "Fossify Thank You" app, and
+      this is the switch it provides to pretend that app is installed.
+    -->
+    <bool name="pretend_thank_you_installed">true</bool>
+</resources>
