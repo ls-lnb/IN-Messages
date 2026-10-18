@@ -2,16 +2,15 @@ package org.fossify.messages.activities
 
 import android.content.ComponentName
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
-import org.fossify.commons.dialogs.ColorPickerDialog
-import org.fossify.commons.dialogs.RadioGroupDialog
+import org.fossify.commons.dialogs.LineColorPickerDialog
 import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.NavigationIcon
-import org.fossify.commons.models.RadioItem
 import org.fossify.messages.R
 import org.fossify.messages.databinding.ActivityCustomizeColorsBinding
 import org.fossify.messages.extensions.config
@@ -25,10 +24,18 @@ import org.fossify.messages.helpers.defaultAppIconVariant
  * that, so the colours go into this app's own preferences instead. Commons applies them through
  * getProperPrimaryColor(), getProperTextColor() and getProperBackgroundColor() everywhere.
  *
- * A colour of 0 means "use the theme default", which is also what the reset action writes.
+ * The app icon is different: it is one of the launcher aliases declared in the manifest, so
+ * choosing one enables that alias and disables the rest, which is what makes the launcher icon
+ * change. Commons' own helper for this reads R.array.app_icon_colors, an array this app never
+ * defined, so the switching is done here.
+ *
+ * A colour of 0 means "use the theme default", which is what the reset action writes.
  */
 class CustomizeColorsActivity : SimpleActivity() {
     private val binding by viewBinding(ActivityCustomizeColorsBinding::inflate)
+
+    /** The launcher palette, which doubles as the base strip for the general colours. */
+    private val palette = ArrayList(appIconVariants.map { it.color })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,14 +57,18 @@ class CustomizeColorsActivity : SimpleActivity() {
             pickColor(config.backgroundColor, getProperBackgroundColor()) { config.backgroundColor = it }
         }
         binding.colorsIconHolder.setOnClickListener {
-            val variants = appIconVariants
-            val items = ArrayList<RadioItem>(variants.size)
-            variants.forEachIndexed { index, variant ->
-                items.add(RadioItem(index, variant.name.replace('_', ' ')))
-            }
-
-            RadioGroupDialog(this, items, variants.indexOf(currentIconVariant())) { selectedId ->
-                applyIconVariant(variants[selectedId as Int])
+            // one strip and no shades: only the launcher's own colours are valid
+            LineColorPickerDialog(
+                this,
+                currentIconVariant().color,
+                false,
+                ICON_PICKER_LINES,
+                palette,
+                binding.colorsAppbar
+            ) { wasPositive, color ->
+                if (wasPositive) {
+                    applyIconVariant(closestIconVariant(color))
+                }
             }
         }
     }
@@ -85,19 +96,20 @@ class CustomizeColorsActivity : SimpleActivity() {
 
     /** [current] is 0 while the default is in use, in which case the dialog opens on [shown]. */
     private fun pickColor(current: Int, shown: Int, apply: (Int) -> Unit) {
-        ColorPickerDialog(
+        val initialColor = if (current == 0) shown else current
+        LineColorPickerDialog(
             this,
-            if (current == 0) shown else current,
+            initialColor,
             false,
-            true,
-            {},
-            { wasPositive, newColor ->
-                if (wasPositive) {
-                    apply(newColor)
-                    updateColors()
-                }
+            COLOR_PICKER_LINES,
+            palette,
+            binding.colorsAppbar
+        ) { wasPositive, newColor ->
+            if (wasPositive) {
+                apply(newColor)
+                updateColors()
             }
-        )
+        }
     }
 
     private fun updateColors() {
@@ -110,27 +122,36 @@ class CustomizeColorsActivity : SimpleActivity() {
 
     /** The alias the launcher is currently using; falls back to the shipped one. */
     private fun currentIconVariant(): AppIconVariant {
-        val packageManager = packageManager
+        val manager = packageManager
         return appIconVariants.firstOrNull { variant ->
-            val state = packageManager.getComponentEnabledSetting(iconComponent(variant))
-            state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            manager.getComponentEnabledSetting(iconComponent(variant)) ==
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
         } ?: defaultAppIconVariant
+    }
+
+    private fun closestIconVariant(color: Int): AppIconVariant {
+        return appIconVariants.firstOrNull { it.color == color }
+            ?: appIconVariants.minByOrNull { colorDistance(it.color, color) }
+            ?: defaultAppIconVariant
+    }
+
+    private fun colorDistance(first: Int, second: Int): Int {
+        val red = Color.red(first) - Color.red(second)
+        val green = Color.green(first) - Color.green(second)
+        val blue = Color.blue(first) - Color.blue(second)
+        return red * red + green * green + blue * blue
     }
 
     /** Enables the chosen alias and disables the rest, which is what changes the launcher icon. */
     private fun applyIconVariant(variant: AppIconVariant) {
-        val packageManager = packageManager
+        val manager = packageManager
         appIconVariants.forEach { other ->
             val state = if (other == variant) {
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED
             } else {
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             }
-            packageManager.setComponentEnabledSetting(
-                iconComponent(other),
-                state,
-                PackageManager.DONT_KILL_APP
-            )
+            manager.setComponentEnabledSetting(iconComponent(other), state, PackageManager.DONT_KILL_APP)
         }
 
         config.appIconColor = variant.color
@@ -139,5 +160,11 @@ class CustomizeColorsActivity : SimpleActivity() {
 
     private fun iconComponent(variant: AppIconVariant): ComponentName {
         return ComponentName(packageName, "$packageName.activities.SplashActivity.${variant.name}")
+    }
+
+    companion object {
+        /** one strip for the launcher colours, a strip plus shades for the free ones */
+        private const val ICON_PICKER_LINES = 1
+        private const val COLOR_PICKER_LINES = 2
     }
 }
