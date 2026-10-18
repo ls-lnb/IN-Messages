@@ -123,6 +123,7 @@ class SettingsActivity : SimpleActivity() {
         setupTopAppBar(binding.settingsAppbar, NavigationIcon.Arrow)
 
         setupCustomizeColors()
+        setupAppColors()
         setupCustomizeNotifications()
         setupUseEnglish()
         setupLanguage()
@@ -252,6 +253,12 @@ class SettingsActivity : SimpleActivity() {
     override fun onPause() {
         super.onPause()
         blockedNumbersAtPause = getBlockedNumbers().hashCode()
+    }
+
+    private fun setupAppColors() = binding.apply {
+        settingsAppColorsHolder.setOnClickListener {
+            startActivity(Intent(this@SettingsActivity, CustomizeColorsActivity::class.java))
+        }
     }
 
     private fun setupCustomizeColors() = binding.apply {

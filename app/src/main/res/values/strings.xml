@@ -44,6 +44,9 @@
     <string name="added_to_group">Added to %s</string>
     <string name="sort_alphabetically">A-Z</string>
     <string name="sort_by_most_recent">Recent</string>
+    <string name="customize_app_colors">Customize colors</string>
+    <string name="customize_app_colors_hint">Text, background and primary colors are applied across the app. Leave a color at its default to follow the theme.</string>
+    <string name="reset_colors">Reset colors</string>
     <string name="detect_otp_codes">Detect one time passwords</string>
     <string name="otp_keywords">OTP keywords</string>
     <string name="otp_keywords_none">Default formats only</string>
