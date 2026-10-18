@@ -2,9 +2,8 @@ package org.fossify.messages.activities
 
 import android.content.ComponentName
 import android.content.pm.PackageManager
-import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.os.Bundle
-import org.fossify.commons.dialogs.LineColorPickerDialog
 import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
@@ -12,8 +11,11 @@ import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.NavigationIcon
 import org.fossify.messages.R
+import org.fossify.messages.dialogs.AppColorPickerDialog
 import org.fossify.messages.databinding.ActivityCustomizeColorsBinding
 import org.fossify.messages.extensions.config
+import org.fossify.messages.helpers.appColorPalette
+import org.fossify.messages.helpers.colorDistance
 import org.fossify.messages.helpers.AppIconVariant
 import org.fossify.messages.helpers.appIconVariants
 import org.fossify.messages.helpers.defaultAppIconVariant
@@ -33,9 +35,6 @@ import org.fossify.messages.helpers.defaultAppIconVariant
  */
 class CustomizeColorsActivity : SimpleActivity() {
     private val binding by viewBinding(ActivityCustomizeColorsBinding::inflate)
-
-    /** The launcher palette, which doubles as the base strip for the general colours. */
-    private val palette = ArrayList(appIconVariants.map { it.color })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,13 +57,12 @@ class CustomizeColorsActivity : SimpleActivity() {
         }
         binding.colorsIconHolder.setOnClickListener {
             // one strip and no shades: only the launcher's own colours are valid
-            LineColorPickerDialog(
+            AppColorPickerDialog(
                 this,
                 currentIconVariant().color,
-                false,
-                ICON_PICKER_LINES,
-                palette,
-                binding.colorsAppbar
+                appIconVariants.map { it.color },
+                iconPreview = variantIconDrawable(),
+                showShades = false
             ) { wasPositive, color ->
                 if (wasPositive) {
                     applyIconVariant(closestIconVariant(color))
@@ -97,13 +95,12 @@ class CustomizeColorsActivity : SimpleActivity() {
     /** [current] is 0 while the default is in use, in which case the dialog opens on [shown]. */
     private fun pickColor(current: Int, shown: Int, apply: (Int) -> Unit) {
         val initialColor = if (current == 0) shown else current
-        LineColorPickerDialog(
+        AppColorPickerDialog(
             this,
             initialColor,
-            false,
-            COLOR_PICKER_LINES,
-            palette,
-            binding.colorsAppbar
+            appColorPalette,
+            iconPreview = null,
+            showShades = true
         ) { wasPositive, newColor ->
             if (wasPositive) {
                 apply(newColor)
@@ -135,13 +132,6 @@ class CustomizeColorsActivity : SimpleActivity() {
             ?: defaultAppIconVariant
     }
 
-    private fun colorDistance(first: Int, second: Int): Int {
-        val red = Color.red(first) - Color.red(second)
-        val green = Color.green(first) - Color.green(second)
-        val blue = Color.blue(first) - Color.blue(second)
-        return red * red + green * green + blue * blue
-    }
-
     /** Enables the chosen alias and disables the rest, which is what changes the launcher icon. */
     private fun applyIconVariant(variant: AppIconVariant) {
         val manager = packageManager
@@ -162,9 +152,14 @@ class CustomizeColorsActivity : SimpleActivity() {
         return ComponentName(packageName, "$packageName.activities.SplashActivity.${variant.name}")
     }
 
-    companion object {
-        /** one strip for the launcher colours, a strip plus shades for the free ones */
-        private const val ICON_PICKER_LINES = 1
-        private const val COLOR_PICKER_LINES = 2
+    /** The launcher icon for [variant], used as the preview in the app icon picker. */
+    private fun variantIconDrawable(variant: AppIconVariant = currentIconVariant()): Drawable? {
+        val name = if (variant == defaultAppIconVariant) {
+            "ic_launcher"
+        } else {
+            "ic_launcher_${variant.name.lowercase()}"
+        }
+        val iconRes = resources.getIdentifier(name, "mipmap", packageName)
+        return if (iconRes == 0) null else getDrawable(iconRes)
     }
 }
