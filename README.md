@@ -1,4 +1,4 @@
-# Messages — a Fossify Messages fork
+# IN Messages — a Fossify Messages fork
 
 <img alt="Logo" src="graphics/icon.webp" width="120" />
 
@@ -6,7 +6,7 @@ This is a fork of [Fossify Messages](https://github.com/FossifyOrg/Messages), th
 
 ## What this fork adds
 
-All of the base app's features, plus **sender grouping**, **one time password handling** and **colour customisation**, aimed at short-code clutter (banks, delivery services, promotions — especially Indian short codes).
+It is built particularly for Indian users and the way messages arrive here: banks, cards, brokers, wallets, deliveries and utilities each write from their own short code, so a day's inbox is a wall of near-identical alerts. On top of everything the base app does, this fork adds **sender grouping**, **one time password handling** and **colour customisation** for exactly that clutter.
 
 It installs as **IN Messages** (`com.blinkingblue.inmessages`), so it can sit alongside the original app.
 
