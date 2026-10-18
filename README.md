@@ -6,16 +6,47 @@ This is a fork of [Fossify Messages](https://github.com/FossifyOrg/Messages), th
 
 ## What this fork adds
 
-All of the base app's features, plus **sender grouping** — keeping short-code SMS clutter (banks, delivery services, promotions, especially Indian short codes) organized:
+All of the base app's features, plus **sender grouping** and **one time password handling**, aimed at short-code clutter (banks, delivery services, promotions — especially Indian short codes).
 
-- **Automatic sender grouping** — short-code threads from the same sender are merged into a single conversation instead of spamming the conversation list.
-- **Manual grouping** — group (and ungroup) any senders yourself, with confirmation before splitting a group apart.
-- **Group icons & sync progress** — grouped conversations show a group icon, with progress shown while grouping syncs.
-- **Searchable sender picker with similar-sender suggestions** — a picker that searches your senders and suggests similar-looking ones when building a group.
-- **Search inside grouped conversations** — full-text search across all threads in a group, with match count and navigation between matches.
-- **Sender codes in grouped threads** — received messages in a grouped thread display the sender's phone number so you can tell real senders apart.
-- **Settings export/import** — back up and restore all settings, including your sender groups, as a portable JSON file.
-- **CI releases** — a universal APK is built and released automatically on every push to `main`.
+### Sender grouping
+
+- **Grouped conversations** — threads from the senders of a group merge into one conversation in the list, so codes from the same bank stop flooding it.
+- **Two-tab sender picker** — *Search senders* and *Grouped senders*. Senders move between the tabs when you save, the picker stays open so you can see the move, and its header shows the group's name. Similar senders (same bank core code) float to the top of the search tab, suggested but not preselected.
+- **Quick "Add to group"** — from an ungrouped short code, pick a group from a name-only dialog and the sender is filed immediately.
+- **Group list ordering** — the add-to-group dialog lists groups with the most recent activity first, mirroring the conversation list, with an A–Z toggle in the header; your choice is remembered.
+- **Safer group edits** — moving a sender out of a group no longer wipes that group's remaining members, members missing from the SMS list are no longer dropped, and ungrouping a conversation asks for confirmation first.
+- **Group icons and sync progress** — grouped conversations show a group icon, with progress shown while the grouping syncs.
+- **Sender codes in grouped threads** — received messages show the sender's code, so you can still tell senders apart inside a group.
+- **Search inside grouped conversations** — full-text search across every thread in a group, with a match count and navigation between matches.
+- **Settings export/import** — back up and restore all settings, sender groups included, as a portable JSON file.
+
+### Search
+
+- **Prioritised results** — sender groups rank first, then individual senders, then message text. Group matching ignores separators, so "hdfc bank" finds "HDFC-BANK".
+- **Yellow highlighter** — matched words are highlighted with a yellow marker background, both in the in-conversation search (the one with ↑/↓ navigation) and in the global results list.
+- **Instant jump to the newest message** — the scroll-to-bottom button jumps straight to the bottom instead of animating through the whole history.
+- **Tidier conversation list** — the list title was oversized (1.2× the base text size, larger than messages themselves); it now tracks the message text at 1.05×.
+
+### Grouped-sender notifications
+
+- **One notification per group, headed with the group name** — messages from every member accumulate in it, and each message still shows which short code wrote it. Tapping opens the grouped conversation.
+- **Reading anywhere clears it** — opening the thread, marking read from the conversation list, archiving or deleting clears the shared notification. Splitting or editing a group also clears the notifications it leaves behind, so nothing stale lingers.
+- **Known trade-off** — a collapsed notification only shows the newest message, so several new messages in one group look like one notification until expanded. Bundled or counted variants are still being evaluated.
+
+### One time passwords
+
+- **Codes in the notification, no expansion needed** — an `OTP: 123456` line appears in the notification header, the code itself is bold and highlighted inside the message line, and a **Copy code** action puts it on the clipboard.
+- **Codes in the conversation** — the code is underlined in the thread; long-press it for **Copy code**.
+- **Broad format support** — `otp`, `one time password` / `pin` / `passcode` / `code`, `verification`, `verify`, `security`, `authentication`, `confirmation`, `login` and `identification` code, `temporary password`, `passcode`, `tpin`, `your code`, matched case-insensitively with spaces or dashes interchangeable.
+- **Amounts, dates and masked numbers are never mistaken for codes** — `Rs:5000`, `1234.56`, `11-09-2026` and `XX1001` are ignored, so balance alerts, card suffixes and dates do not turn into codes.
+- **Codes may sit either side of a phrase**, up to 80 characters away, and the nearest candidate wins.
+- **Your own formats** — "Detect one time passwords" switches the feature on or off, and the OTP keywords screen adds your own phrases with a live sample-message preview while listing the built-in formats read-only. Codes stay hidden when lock-screen visibility is set to show nothing.
+
+### Development
+
+- **Unit tests, including a message corpus** — `OtpDetectorTest` covers formats and the amount/date/masked-number rules; `OtpCorpusTest` replays 375 real-shaped messages (21 with a code, 354 without). Run them with `./gradlew testFossDebugUnitTest`.
+- **Corpus sources**, with thanks and their licences: [skyaara/indian-payment-sms-dataset](https://github.com/skyaara/indian-payment-sms-dataset) (CC BY 4.0), [abhirajsinha/omoi-sms-parser](https://github.com/abhirajsinha/omoi-sms-parser) (MIT) and [akhilnarang/bank-sms-parser](https://github.com/akhilnarang/bank-sms-parser) (MIT), plus messages received on the device. Provenance is recorded in `app/src/test/resources/otp-corpus.tsv`.
+- **CI** — the tests run on pull requests to `main` and gate the release build; a universal APK is released on every push to `main`. Work lands on `develop` first.
 
 <div align="center">
 <img alt="App image" src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" width="30%">
