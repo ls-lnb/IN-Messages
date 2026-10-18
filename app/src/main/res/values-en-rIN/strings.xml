@@ -1,2 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>    <string name="customize_app_colors">Customize colours</string>
+    <string name="customize_app_colors_hint">These colours are applied across the app; a colour left at its default follows the theme. The launcher icon takes one of the built-in icon colours and stays put for anything else.</string>
+    <string name="follow_system_colors">Follow system colours</string>
+    <string name="follow_system_colors_hint">Colours come from your wallpaper through the system theme. Turn this off to pick the colours below.</string>
+    <string name="reset_colors">Reset colours</string>
+    <string name="app_icon_color">App icon colour</string>
+</resources>

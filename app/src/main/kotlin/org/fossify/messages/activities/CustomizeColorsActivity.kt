@@ -1,6 +1,8 @@
 package org.fossify.messages.activities
 
 import android.os.Bundle
+import androidx.annotation.ColorRes
+import androidx.core.content.ContextCompat
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.getProperPrimaryColor
@@ -17,7 +19,6 @@ import org.fossify.messages.extensions.config
 import org.fossify.messages.helpers.appColorPalette
 import org.fossify.messages.helpers.AppIconSwitcher
 import org.fossify.messages.helpers.appIconVariants
-import org.fossify.messages.helpers.defaultAppIconVariant
 
 /**
  * Colour customization owned by this fork. Commons only offers these rows when its Thank You app
@@ -29,15 +30,21 @@ import org.fossify.messages.helpers.defaultAppIconVariant
  * choosing one enables that alias and disables the rest, which is what makes the launcher icon
  * change. That switching lives in AppIconSwitcher.
  *
- * A colour of 0 means "use the theme default", which is what the reset action writes.
+ * On Android 12+ commons resolves every colour through the system theme first, so while the app
+ * follows the system theme these colours are ignored. Rather than accept a colour that would do
+ * nothing, the colour rows and the reset action are disabled in that state; the switch turns
+ * following off, which is what allows picking.
  *
- * On Android 12+ commons resolves every colour through the system theme first, so a colour picked
- * while that is on would be stored and then ignored. The switch on this screen turns it off, and
- * picking a colour does the same, so a colour never appears to do nothing.
+ * A colour of 0 is not "use the theme default" either: commons draws a stored 0 verbatim, which
+ * makes the text and background transparent, so reset writes the theme's default colours.
  */
 class CustomizeColorsActivity : SimpleActivity() {
     private val binding by viewBinding(ActivityCustomizeColorsBinding::inflate)
     private val iconSwitcher by lazy { AppIconSwitcher(this) }
+
+    private companion object {
+        const val DISABLED_ROW_ALPHA = 0.4f
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,9 +54,10 @@ class CustomizeColorsActivity : SimpleActivity() {
             scrollingView = binding.colorsNestedScrollview,
             topAppBar = binding.colorsAppbar
         )
-        setupOptionsMenu()
         setupSystemThemeRow()
+        healTransparentColors()
 
+        binding.colorsResetHolder.setOnClickListener { resetColors() }
         binding.colorsPrimaryHolder.setOnClickListener {
             pickColor(config.primaryColor, getProperPrimaryColor()) { config.primaryColor = it }
         }
@@ -84,23 +92,40 @@ class CustomizeColorsActivity : SimpleActivity() {
         updateColors()
     }
 
-    private fun setupOptionsMenu() {
-        binding.colorsToolbar.setOnMenuItemClickListener { menuItem ->
-            if (menuItem.itemId == R.id.reset_colors) {
-                config.primaryColor = 0
-                config.textColor = 0
-                config.backgroundColor = 0
-                iconSwitcher.apply(defaultAppIconVariant)
-                updateColors()
-                true
-            } else {
-                false
-            }
+    /**
+     * Commons draws a stored 0 verbatim rather than treating it as unset, so a reset has to write
+     * the theme's own default colours. Zeros would leave the text and background transparent. The
+     * launcher icon is deliberately untouched: it is not one of these colours and does not follow
+     * the system theme either, so it has its own section on the screen.
+     */
+    private fun resetColors() {
+        applyDefaultColors()
+        updateColors()
+    }
+
+    private fun applyDefaultColors() {
+        config.primaryColor = defaultColor(org.fossify.commons.R.color.default_primary_color)
+        config.textColor = defaultColor(org.fossify.commons.R.color.default_text_color)
+        config.backgroundColor = defaultColor(org.fossify.commons.R.color.default_background_color)
+    }
+
+    /** 0 is what an earlier version of the reset action wrote, and it renders as transparent. */
+    private fun healTransparentColors() {
+        if (config.primaryColor == 0 || config.textColor == 0 || config.backgroundColor == 0) {
+            applyDefaultColors()
+            updateColors()
         }
+    }
+
+    private fun defaultColor(@ColorRes resId: Int): Int {
+        return ContextCompat.getColor(this, resId)
     }
 
     private fun setupSystemThemeRow() {
         binding.colorsSystemThemeHolder.beVisibleIf(isSPlus())
+        // the switch style is not clickable on its own, commons' own settings rows toggle it from
+        // the row, so tapping anywhere on the row has to do the same here
+        binding.colorsSystemThemeHolder.setOnClickListener { binding.colorsSystemTheme.toggle() }
         binding.colorsSystemTheme.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked != config.isSystemThemeEnabled) {
                 config.isSystemThemeEnabled = isChecked
@@ -122,25 +147,10 @@ class CustomizeColorsActivity : SimpleActivity() {
             ) { wasPositive, newColor ->
                 if (wasPositive) {
                     apply(newColor)
-                    stopFollowingSystemColors()
                     updateColors()
                 }
             }
         }.onFailure { toast("Colour picker failed: $it") }
-    }
-
-    /**
-     * A picked colour cannot take effect while the system theme owns the colours on Android 12+,
-     * so following it is turned off here rather than leaving the pick looking broken.
-     */
-    private fun stopFollowingSystemColors() {
-        if (!isSPlus() || !config.isSystemThemeEnabled) {
-            return
-        }
-
-        config.isSystemThemeEnabled = false
-        toast(R.string.stopped_following_system_colors)
-        recreate()
     }
 
     private fun updateColors() {
@@ -151,5 +161,19 @@ class CustomizeColorsActivity : SimpleActivity() {
         binding.colorsTextSwatch.setColorFilter(getProperTextColor())
         binding.colorsBackgroundSwatch.setColorFilter(getProperBackgroundColor())
         binding.colorsIconSwatch.setColorFilter(iconSwitcher.current().color)
+
+        // while the app follows the system theme these colours cannot take effect, so the rows and
+        // the reset action are shown as unavailable instead of silently ignoring a pick
+        val canPick = !config.isSystemThemeEnabled
+        listOf(
+            binding.colorsPrimaryHolder,
+            binding.colorsTextHolder,
+            binding.colorsBackgroundHolder
+        ).forEach { row ->
+            row.isEnabled = canPick
+            row.alpha = if (canPick) 1f else DISABLED_ROW_ALPHA
+        }
+        binding.colorsResetHolder.isEnabled = canPick
+        binding.colorsResetHolder.alpha = if (canPick) 1f else DISABLED_ROW_ALPHA
     }
 }

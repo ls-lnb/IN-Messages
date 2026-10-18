@@ -47,8 +47,7 @@
     <string name="customize_app_colors">Customize colors</string>
     <string name="customize_app_colors_hint">These colors are applied across the app; a color left at its default follows the theme. The launcher icon takes one of the built-in icon colors and stays put for anything else.</string>
     <string name="follow_system_colors">Follow system colors</string>
-    <string name="follow_system_colors_hint">Colors come from your wallpaper through the system theme. Picking a color below turns this off, because otherwise the system color keeps winning.</string>
-    <string name="stopped_following_system_colors">Stopped following system colors, so your color applies now</string>
+    <string name="follow_system_colors_hint">Colors come from your wallpaper through the system theme. Turn this off to pick the colors below.</string>
     <string name="reset_colors">Reset colors</string>
     <string name="app_icon_color">App icon color</string>
     <string name="detect_otp_codes">Detect one time passwords</string>

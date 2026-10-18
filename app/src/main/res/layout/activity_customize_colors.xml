@@ -16,7 +16,6 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/color_primary"
-            app:menu="@menu/menu_customize_colors"
             app:title="@string/customize_app_colors"
             app:titleTextAppearance="@style/AppTheme.ActionBar.TitleTextStyle" />
 
@@ -144,6 +143,23 @@
                     android:src="@drawable/circle_filled" />
 
             </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/colors_reset_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/colors_reset"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/reset_colors" />
+
+            </RelativeLayout>
+
+            <include layout="@layout/divider" />
 
             <RelativeLayout
                 android:id="@+id/colors_icon_holder"
