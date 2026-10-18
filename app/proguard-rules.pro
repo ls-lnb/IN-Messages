@@ -44,3 +44,18 @@
 -keepclassmembers,allowobfuscation class ezvcard.parameter.* extends ezvcard.parameter.MediaTypeParameter {
     <init>(java.lang.String, java.lang.String, java.lang.String);
 }
+
+# Commons shows a "You are using a fake version of the app" dialog from BaseSimpleActivity
+# whenever the package name does not start with "org.fossify.". This fork deliberately ships its
+# own application id, so the void call is marked side effect free and R8 removes it (and the
+# dialog string with it). Release builds are minified, which is what is installed.
+-assumenosideeffects class org.fossify.commons.extensions.ActivityKt {
+    public static void showModdedAppWarning(org.fossify.commons.activities.BaseSimpleActivity);
+}
+
+# The compose based screens run the same check from the shared theme wrapper
+# (AppTheme -> FakeVersionCheck), which is what fires when a compose dialog - such as the
+# customization screen - is opened.
+-assumenosideeffects class org.fossify.commons.compose.extensions.ComposeActivityExtensionsKt {
+    public static void FakeVersionCheck(androidx.compose.runtime.Composer, int);
+}
