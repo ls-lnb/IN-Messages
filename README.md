@@ -37,8 +37,9 @@ All of the base app's features, plus **sender grouping** and **one time password
 
 - **Codes in the notification, no expansion needed** — an `OTP: 123456` line appears in the notification header, the code itself is bold and highlighted inside the message line, and a **Copy code** action puts it on the clipboard.
 - **Codes in the conversation** — the code is underlined in the thread; long-press it for **Copy code**.
-- **Broad format support** — `otp`, `one time password` / `pin` / `passcode` / `code`, `verification`, `verify`, `security`, `authentication`, `confirmation`, `login` and `identification` code, `temporary password`, `passcode`, `tpin`, `your code`, matched case-insensitively with spaces or dashes interchangeable.
-- **Amounts, dates and masked numbers are never mistaken for codes** — `Rs:5000`, `1234.56`, `11-09-2026` and `XX1001` are ignored, so balance alerts, card suffixes and dates do not turn into codes.
+- **Broad format support** — `otp`, `one time password` / `pin` / `passcode` / `code`, `verification`, `verify`, `security`, `authentication`, `confirmation`, `login` and `identification` code, `temporary password`, `passcode`, `tpin`, `use code`, `your code`, matched case-insensitively with spaces or dashes interchangeable.
+- **Numeric and mixed codes** — plain 4–8 digit codes, plus mixed alphanumeric ones such as Steam's `2MB8G` (4–10 characters holding at least two digits and two letters, any case). When a message holds both a code and a mixed reference, the digits win.
+- **Amounts, dates and masked or plain words are never mistaken for codes** — `Rs:5000`, `Rs5000`, `1234.56`, `11-09-2026`, `XX1001`, and words such as `AMAZON` or `VALID` are ignored, so balance alerts, card suffixes, dates and bank names do not turn into codes.
 - **Codes may sit either side of a phrase**, up to 80 characters away, and the nearest candidate wins.
 - **Your own formats** — "Detect one time passwords" switches the feature on or off, and the OTP keywords screen adds your own phrases with a live sample-message preview while listing the built-in formats read-only. Codes stay hidden when lock-screen visibility is set to show nothing.
 

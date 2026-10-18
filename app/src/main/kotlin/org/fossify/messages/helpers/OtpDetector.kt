@@ -32,10 +32,25 @@ val otpBuiltInKeywords = listOf(
     "temporary code",
     "passcode",
     "tpin",
+    "use code",
     "your code",
 )
 
 private val otpNumberRegex = Regex("(?<!\\d)(\\d{4,8})(?!\\d)")
+
+/**
+ * Mixed alphanumeric codes (Steam's 2MB8G, Uber's 4F7K2): 4-10 characters holding at least two
+ * digits and at least two letters. Requiring both keeps plain words such as AMAZON or VALID out,
+ * which is what a letters-only pattern cannot do - those are exactly the words that sit next to
+ * "OTP" in bank messages.
+ */
+private val otpAlphanumericRegex = Regex(
+    "(?<![A-Za-z0-9])" +
+        "(?=[A-Za-z0-9]{4,10}(?![A-Za-z0-9]))" +
+        "(?=[A-Za-z0-9]*\\d[A-Za-z0-9]*\\d)" +
+        "(?=[A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*[A-Za-z])" +
+        "[A-Za-z0-9]+"
+)
 
 /**
  * How far from a keyword a code may sit. Bank messages put an amount and a merchant between the
@@ -63,6 +78,13 @@ private val otpDateAfterRegex = Regex("^[-/.]\\d{1,2}([-/.]|$)")
 /** Masked account and card digits: XX1001, A/c *0000, ####1234. */
 private val otpMaskedDigitsRegex = Regex("(?i)[x*#]{1,6}$")
 
+/** A masked token itself, now that a token may carry letters: XX1001, **12ab, ####1234. */
+private val otpMaskedTokenRegex = Regex("(?i)^[x*#]{2,}|[*#]")
+
+/** Amounts written straight after the currency rather than before the number: Rs5000, INR2500. */
+private val otpAmountTokenRegex = Regex("(?i)(^|[^\\p{L}])(rs|inr|re|usd|aud|sgd|\\$|₹)$")
+private val otpCurrencyTokenRegex = Regex("(?i)^(rs|inr|re|usd|aud|sgd|\\$|₹)\\d")
+
 /** Characters between a keyword and a number, 0 when they touch or overlap. */
 private fun otpGapBetween(keyword: IntRange, number: IntRange): Int {
     return when {
@@ -79,13 +101,18 @@ private fun otpGapBetween(keyword: IntRange, number: IntRange): Int {
  * when nothing else matches.
  */
 private fun CharSequence.isNotOtpCode(number: IntRange): Boolean {
+    val token = substring(number)
+    if (otpMaskedTokenRegex.containsMatchIn(token) || otpCurrencyTokenRegex.containsMatchIn(token)) {
+        return true
+    }
+
     val before = subSequence(maxOf(0, number.first - OTP_NOISE_LOOK_BACK), number.first).toString()
     val after = subSequence(number.last + 1, length).toString()
     val isDecimal = after.startsWith(".") && after.getOrNull(1)?.isDigit() == true
     val isDate = otpDateBeforeRegex.containsMatchIn(before) ||
         otpDateAfterRegex.containsMatchIn(after.take(OTP_NOISE_LOOK_AHEAD))
     return isDecimal || isDate || otpAmountPrefixRegex.containsMatchIn(before) ||
-        otpMaskedDigitsRegex.containsMatchIn(before)
+        otpAmountTokenRegex.containsMatchIn(before) || otpMaskedDigitsRegex.containsMatchIn(before)
 }
 
 
@@ -135,9 +162,17 @@ fun String.extractOtpCode(extraKeywords: Collection<String> = emptyList()): Stri
         return null
     }
 
+    // codes come in two shapes: plain digits, and mixed alphanumeric tokens such as Steam's 2MB8G.
+    // Digits are tried first: in bank messages a mixed token near a phrase is usually a reference
+    // (an order or UTR number), so it only gets a chance when no numeric code fits.
+    return findOtpCode(otpNumberRegex, keywords) ?: findOtpCode(otpAlphanumericRegex, keywords)
+}
+
+/** The 4-8 digit or 4-10 character token closest to one of [keywords], or null. */
+private fun CharSequence.findOtpCode(pattern: Regex, keywords: List<IntRange>): String? {
     var bestGap = Int.MAX_VALUE
     var bestCode: String? = null
-    for (match in otpNumberRegex.findAll(this)) {
+    for (match in pattern.findAll(this)) {
         if (isNotOtpCode(match.range)) {
             continue
         }

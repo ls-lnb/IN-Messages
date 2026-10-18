@@ -74,6 +74,47 @@ class OtpDetectorTest {
     }
 
     @Test
+    fun detectsAlphanumericCodes() {
+        assertEquals("2MB8G", "Use code 2MB8G to change credentials for your Steam account".extractOtpCode())
+        assertEquals("2mb8g", "Your code is 2mb8g".extractOtpCode())
+        assertEquals("4F7K2", "Your Uber verification code is 4F7K2".extractOtpCode())
+        assertEquals("AB12CD", "OTP: AB12CD".extractOtpCode())
+        assertEquals("8KJ2M4", "OTP for your Netflix account is 8KJ2M4".extractOtpCode())
+        assertEquals("AB12", "Your OTP is AB12".extractOtpCode())
+    }
+
+    @Test
+    fun alphanumericCodesNeedTwoDigitsTwoLettersAndFourToTenChars() {
+        // too short, no digits, one digit, or too long - none of these are codes
+        assertNull("Your OTP is A1B".extractOtpCode())
+        assertNull("Your OTP is ABCDEF".extractOtpCode())
+        assertNull("Your OTP is ABC1".extractOtpCode())
+        assertNull("Your OTP is AB1CD".extractOtpCode())
+        assertNull("Your OTP is 12AB34CD567".extractOtpCode())
+
+        // the boundaries themselves are accepted
+        assertEquals("AB12", "Your OTP is AB12".extractOtpCode())
+        assertEquals("AB12C", "Your OTP is AB12C".extractOtpCode())
+        assertEquals("12AB34CD56", "Your OTP is 12AB34CD56".extractOtpCode())
+    }
+
+    @Test
+    fun wordsAndAmountsAreNotCodes() {
+        assertNull("OTP for your AMAZON transaction of Rs.500".extractOtpCode())
+        assertNull("Your OTP for ZOMATO is VALID for 10 mins".extractOtpCode())
+        assertNull("OTP 2FA required for your ICICI account".extractOtpCode())
+        assertNull("Rs5000 debited. Never share the OTP.".extractOtpCode())
+        assertNull("INR2500 debited from A/c XX1234. Do not share your OTP.".extractOtpCode())
+        assertNull("Your OTP was sent to card XX1234. Do not share.".extractOtpCode())
+    }
+
+    @Test
+    fun digitsWinWhenAMixedReferenceSitsCloser() {
+        assertEquals("998877", "Your OTP for order 12AB34CD is 998877".extractOtpCode())
+        assertEquals("445566", "OTP for txn AB12CD34 of Rs.500 is 445566".extractOtpCode())
+    }
+
+    @Test
     fun skipsNumbersThatAreMoneyOrDates() {
         val credit = "Your SB A/c *0000 Credited for Rs:1500.00 on 11-09-2026 12:04:11 by IMPS ref no " +
             "000000000000 Avl Bal Rs:4364.46.Never Share OTP/PIN/CVV-Union Bank of India"

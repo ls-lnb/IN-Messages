@@ -6,6 +6,10 @@
 # Format: <expected code, or -> <TAB> <message> <TAB> <source>
 # Rows tagged user-report are real messages the user received; the rest come from the three
 # repositories above and keep their licences.
+# Rows tagged local-alnum are invented positives and adversarial negatives for the
+# alphanumeric code shapes (2MB8G, 4F7K2) and for the words/amounts that must not match.
+# Where a message holds both a numeric code and a mixed reference, the digits win: see the
+# row "Your OTP for order 12AB34CD is 998877".
 -	Sent Rs.500.00 From HDFC Bank A/C XX1234 To SWIGGY On 12/08/26 Ref 123456789001 Not You? Report it to your bank.	indian-payment-sms-dataset
 -	Rs.500.00 debited from A/c XX4321 on 20-Aug-26 to merchant@upi (UPI Ref No 123456789002)	indian-payment-sms-dataset
 -	Dear UPI user A/C X5678 debited by 420.50 on date 12Aug26 trf to COFFEE SHOP Refno 123456789003. If not you, report it to your bank. -SBI	indian-payment-sms-dataset
@@ -381,3 +385,19 @@
 778899	OTP is 778899. Card ending *4321 was used.	user-report
 998877	Your TPIN is 998877, valid for 5 minutes.	user-report
 556677	Identification code for your Citi account is 556677	user-report
+2MB8G	Use code 2MB8G to change credentials for your Steam account	local-alnum
+2mb8g	Your code is 2mb8g	local-alnum
+4F7K2	Your Uber verification code is 4F7K2	local-alnum
+AB12CD	OTP: AB12CD	local-alnum
+8KJ2M4	OTP for your Netflix account is 8KJ2M4	local-alnum
+12AB34	Use code 12AB34 to verify your number	local-alnum
+9WQ2Z7	Your Discord verification code is 9WQ2Z7	local-alnum
+K4M9P2	Amazon: use code K4M9P2 to sign in to your account	local-alnum
+-	OTP for your AMAZON transaction of Rs.500	local-alnum
+-	Your OTP for ZOMATO is VALID for 10 mins	local-alnum
+-	OTP 2FA required for your ICICI account	local-alnum
+-	Rs5000 debited. Never share the OTP.	local-alnum
+-	INR2500 debited from A/c XX1234. Do not share your OTP.	local-alnum
+-	Your OTP was sent to card XX1234. Do not share.	local-alnum
+-	Never share this OTP with anyone. Ref 123456789012.	local-alnum
+998877	Your OTP for order 12AB34CD is 998877	local-alnum
