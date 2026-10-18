@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
+import org.fossify.commons.activities.CustomizationActivity
 import org.fossify.commons.activities.ManageBlockedNumbersActivity
 import org.fossify.commons.dialogs.ChangeDateTimeFormatDialog
 import org.fossify.commons.dialogs.ConfirmationDialog
@@ -38,6 +39,8 @@ import org.fossify.messages.dialogs.ExportMessagesDialog
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.emptyMessagesRecycleBin
 import org.fossify.messages.extensions.messagesDB
+import org.fossify.messages.helpers.APP_ICON_IDS
+import org.fossify.messages.helpers.APP_LAUNCHER_NAME
 import org.fossify.messages.helpers.Config
 import org.fossify.messages.helpers.FILE_SIZE_100_KB
 import org.fossify.messages.helpers.FILE_SIZE_1_MB
@@ -253,7 +256,13 @@ class SettingsActivity : SimpleActivity() {
 
     private fun setupCustomizeColors() = binding.apply {
         settingsColorCustomizationHolder.setOnClickListener {
-            startCustomizationActivity()
+            // not startCustomizationActivity(): that helper returns without opening anything
+            // unless the package name contains "fossify"
+            Intent(this@SettingsActivity, CustomizationActivity::class.java).apply {
+                putExtra(APP_ICON_IDS, getAppIconIDs())
+                putExtra(APP_LAUNCHER_NAME, getAppLauncherName())
+                startActivity(this)
+            }
         }
     }
 
