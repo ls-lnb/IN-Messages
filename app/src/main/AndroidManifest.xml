@@ -155,6 +155,13 @@
             android:parentActivityName=".activities.SettingsActivity" />
 
         <activity
+            android:name=".activities.ManageOtpKeywordsActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/otp_keywords"
+            android:parentActivityName=".activities.SettingsActivity" />
+
+        <activity
             android:name=".activities.VCardViewerActivity"
             android:configChanges="orientation"
             android:exported="false"
@@ -222,6 +229,11 @@
 
         <receiver
             android:name=".receivers.MarkAsReadReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <receiver
+            android:name=".receivers.CopyOtpReceiver"
             android:enabled="true"
             android:exported="false" />
 

@@ -138,6 +138,8 @@ class SettingsActivity : SimpleActivity() {
         setupGroupMessageAsMMS()
         setupKeepConversationsArchived()
         setupLockScreenVisibility()
+        setupDetectOtpCodes()
+        setupOtpKeywords()
         setupMMSFileSizeLimit()
         setupUseRecycleBin()
         setupEmptyRecycleBin()
@@ -416,6 +418,26 @@ class SettingsActivity : SimpleActivity() {
                 config.lockScreenVisibilitySetting = it as Int
                 settingsLockScreenVisibility.text = getLockScreenVisibilityText()
             }
+        }
+    }
+
+    private fun setupDetectOtpCodes() = binding.apply {
+        settingsDetectOtpCodes.isChecked = config.detectOtpCodes
+        settingsDetectOtpCodesHolder.setOnClickListener {
+            settingsDetectOtpCodes.toggle()
+            config.detectOtpCodes = settingsDetectOtpCodes.isChecked
+        }
+    }
+
+    private fun setupOtpKeywords() = binding.apply {
+        settingsOtpKeywords.text = if (config.otpKeywords.isEmpty()) {
+            getString(R.string.otp_keywords_none)
+        } else {
+            getString(R.string.otp_keywords_count, config.otpKeywords.size)
+        }
+
+        settingsOtpKeywordsHolder.setOnClickListener {
+            startActivity(Intent(this@SettingsActivity, ManageOtpKeywordsActivity::class.java))
         }
     }
 

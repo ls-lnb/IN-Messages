@@ -27,6 +27,7 @@ import org.fossify.messages.extensions.shortcutHelper
 import org.fossify.messages.messaging.isShortCodeWithLetters
 import org.fossify.messages.models.SenderGroup
 import org.fossify.messages.receivers.DeleteSmsReceiver
+import org.fossify.messages.receivers.CopyOtpReceiver
 import org.fossify.messages.receivers.DirectReplyReceiver
 import org.fossify.messages.receivers.MarkAsReadReceiver
 
@@ -50,6 +51,19 @@ class NotificationHelper(private val context: Context) {
         alertOnlyOnce: Boolean = false
     ) {
         val group = context.findSenderGroup(address, threadId)
+        // the code is part of the message body, so only surface it when the message itself is shown
+        val lockScreenVisibility = context.config.lockScreenVisibilitySetting
+        // the code lives in the message body, so keep it hidden when content is hidden entirely
+        val otpCode = if (context.config.detectOtpCodes && lockScreenVisibility != LOCK_SCREEN_NOTHING) {
+            body.extractOtpCode(context.config.otpKeywords)
+        } else {
+            null
+        }
+        val messageBody: CharSequence = if (otpCode != null) {
+            body.highlightOtpCode(otpCode, context.getProperPrimaryColor())
+        } else {
+            body
+        }
         val hasCustomNotifications =
             group == null && context.config.customNotifications.contains(threadId.toString())
         val notificationChannelId =
@@ -135,10 +149,10 @@ class NotificationHelper(private val context: Context) {
             null
         }
         val builder = NotificationCompat.Builder(context, notificationChannelId).apply {
-            when (context.config.lockScreenVisibilitySetting) {
+            when (lockScreenVisibility) {
                 LOCK_SCREEN_SENDER_MESSAGE -> {
                     setLargeIcon(largeIcon)
-                    setStyle(getMessagesStyle(address, body, notificationId, sender, group?.title))
+                    setStyle(getMessagesStyle(address, messageBody, notificationId, sender, group?.title))
                 }
 
                 LOCK_SCREEN_SENDER -> {
@@ -146,14 +160,20 @@ class NotificationHelper(private val context: Context) {
                     setLargeIcon(largeIcon)
                     val summaryText = context.getString(R.string.new_message)
                     setStyle(
-                        NotificationCompat.BigTextStyle().setSummaryText(summaryText).bigText(body)
+                        NotificationCompat.BigTextStyle().setSummaryText(summaryText).bigText(messageBody)
                     )
+                    if (otpCode != null) {
+                        setContentText(context.getString(R.string.otp_code, otpCode))
+                    }
                 }
             }
 
             color = context.getProperPrimaryColor()
             setSmallIcon(R.drawable.ic_messenger)
             setContentIntent(contentPendingIntent)
+            if (otpCode != null) {
+                setSubText(context.getString(R.string.otp_code, otpCode))
+            }
             priority = NotificationCompat.PRIORITY_MAX
             setDefaults(Notification.DEFAULT_LIGHTS)
             setCategory(Notification.CATEGORY_MESSAGE)
@@ -164,6 +184,23 @@ class NotificationHelper(private val context: Context) {
 
         if (replyAction != null && context.config.lockScreenVisibilitySetting == LOCK_SCREEN_SENDER_MESSAGE) {
             builder.addAction(replyAction)
+        }
+
+        if (otpCode != null) {
+            val copyOtpIntent = Intent(context, CopyOtpReceiver::class.java).apply {
+                putExtra(OTP_CODE, otpCode)
+            }
+            val copyOtpPendingIntent = PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                copyOtpIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(
+                org.fossify.commons.R.drawable.ic_copy_vector,
+                context.getString(R.string.copy_otp_code),
+                copyOtpPendingIntent
+            )
         }
 
         builder.addAction(
@@ -277,7 +314,7 @@ class NotificationHelper(private val context: Context) {
 
     private fun getMessagesStyle(
         address: String,
-        body: String,
+        messageBody: CharSequence,
         notificationId: Int,
         name: String?,
         conversationTitle: String?,
@@ -299,7 +336,7 @@ class NotificationHelper(private val context: Context) {
                 style.setConversationTitle(conversationTitle)
             }
             val newMessage =
-                NotificationCompat.MessagingStyle.Message(body, System.currentTimeMillis(), sender)
+                NotificationCompat.MessagingStyle.Message(messageBody, System.currentTimeMillis(), sender)
             style.addMessage(newMessage)
         }
     }
@@ -325,10 +362,6 @@ class NotificationHelper(private val context: Context) {
  */
 fun groupNotificationId(groupId: String): Int = "sender_group_notification:$groupId".hashCode()
 
-/**
- * Cancels the notification of [threadId] and, when it belongs to a sender group, the shared
- * group notification plus any leftover per-sender notifications of its other members.
- */
 /**
  * Cancels the notification of [threadId] and, when it belongs to a sender group, the shared
  * group notification plus any leftover per-sender notifications of its other members.
