@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_launcher_name">Messages</string>
+    <string name="app_launcher_name" translatable="false">IN Messages</string>
     <string name="type_a_message">Type a message…</string>
     <string name="message_not_sent_short">Message not sent</string>
     <string name="message_not_sent_touch_retry">Not sent. Touch to retry.</string>
@@ -44,6 +44,26 @@
     <string name="added_to_group">Added to %s</string>
     <string name="sort_alphabetically">A-Z</string>
     <string name="sort_by_most_recent">Recent</string>
+    <string name="customize_app_colors">Customize colors</string>
+    <string name="customize_app_colors_hint">The launcher icon uses one of its built-in colors and is not affected by the system theme or by Reset colors.</string>
+    <string name="follow_system_colors">Follow system colors</string>
+    <string name="follow_system_colors_hint">Colors come from your wallpaper through the system theme. Turn this off to pick the colors below.</string>
+    <string name="reset_colors">Reset colors</string>
+    <string name="app_icon_color">App icon color</string>
+    <string name="detect_otp_codes">Detect one time passwords</string>
+    <string name="otp_keywords">OTP keywords</string>
+    <string name="otp_keywords_none">Default formats only</string>
+    <string name="otp_keywords_count">%d custom formats</string>
+    <string name="otp_keywords_built_in">Built in formats</string>
+    <string name="otp_keywords_yours">Your formats</string>
+    <string name="add_otp_keyword">Add format</string>
+    <string name="otp_keyword">Keyword or phrase</string>
+    <string name="otp_keyword_required">Enter a keyword or phrase</string>
+    <string name="otp_sample_message">Sample message (optional)</string>
+    <string name="otp_keyword_preview">Detected code: %s</string>
+    <string name="otp_keyword_no_match">No code detected in that message</string>
+    <string name="otp_code">OTP: %s</string>
+    <string name="copy_otp_code">Copy code</string>
     <string name="search_senders">Search senders</string>
     <string name="no_short_code_senders">No short-code senders found</string>
     <string name="sender_group_saved">Group saved</string>
@@ -172,4 +192,6 @@
         Haven't found some strings? There's more at
         https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res
     -->
+    <string name="text_color_matched_to_background">Text color matched the background so it stays readable</string>
+    <string name="background_color_matched_to_text">Background color matched the text so it stays readable</string>
 </resources>

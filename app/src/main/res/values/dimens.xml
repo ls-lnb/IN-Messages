@@ -14,4 +14,8 @@
     <dimen name="attachment_button_height">96dp</dimen>
     <dimen name="attachment_button_width">90dp</dimen>
     <dimen name="default_keyboard_height">250dp</dimen>
+    <!-- used by the in-app colour picker -->
+    <dimen name="color_band_height">34dp</dimen>
+    <dimen name="color_band_selected_height">52dp</dimen>
+
 </resources>

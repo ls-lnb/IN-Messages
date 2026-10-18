@@ -44,3 +44,18 @@
 -keepclassmembers,allowobfuscation class ezvcard.parameter.* extends ezvcard.parameter.MediaTypeParameter {
     <init>(java.lang.String, java.lang.String, java.lang.String);
 }
+
+# Commons shows a "You are using a fake version of the app" dialog from BaseSimpleActivity
+# whenever the package name does not start with "org.fossify.". This fork deliberately ships its
+# own application id, so the void call is marked side effect free and R8 removes it (and the
+# dialog string with it). Release builds are minified, which is what is installed.
+-assumenosideeffects class org.fossify.commons.extensions.ActivityKt {
+    public static void showModdedAppWarning(org.fossify.commons.activities.BaseSimpleActivity);
+}
+
+# Deliberately NOT suppressed: the same warning also exists as a composable
+# (AppTheme -> FakeVersionCheck). -assumenosideeffects on a @Composable is a lie - composables
+# write group bookkeeping to the composer, so removing the call unbalances the composition and
+# breaks the compose screens (that is what stopped the colour customization from working).
+# That variant is rare (it only shows inside commons' compose dialogs) and is handled by
+# keeping the code intact.

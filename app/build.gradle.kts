@@ -25,7 +25,7 @@ fun hasSigningVars(): Boolean {
 
 base {
     val versionCode = project.property("VERSION_CODE").toString().toInt()
-    archivesName = "messages-$versionCode"
+    archivesName = "inmessages-$versionCode"
 }
 
 android {
@@ -116,7 +116,7 @@ android {
         )
     }
 
-    namespace = project.property("APP_ID").toString()
+    namespace = project.property("APP_NAMESPACE").toString()
 
     lint {
         checkReleaseBuilds = false
@@ -154,4 +154,5 @@ dependencies {
     implementation(libs.bundles.room)
     ksp(libs.androidx.room.compiler)
     detektPlugins(libs.compose.detekt)
+    testImplementation(libs.junit)
 }

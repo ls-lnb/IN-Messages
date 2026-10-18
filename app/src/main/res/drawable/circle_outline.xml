@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A stroke-only ring, used as the swatch background. The swatch fill is tinted with a colour
+     filter, which would tint a stroke in the same drawable as well, so the edge has to be its own
+     layer - otherwise a swatch set to the background colour disappears completely. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <stroke
+        android:width="2dp"
+        android:color="#99808080" />
+</shape>

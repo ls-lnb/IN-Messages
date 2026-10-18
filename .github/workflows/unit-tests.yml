@@ -1,0 +1,53 @@
+name: Unit tests
+
+# Keeps the OTP detection work honest: OtpDetectorTest covers the formats and the money/date/mask
+# rules, OtpCorpusTest replays the 375 message corpus in app/src/test/resources/otp-corpus.tsv
+# (sourced from three public corpora plus real messages), so a detector change that regresses any
+# of those messages fails here instead of shipping.
+#
+# Runs on pull requests to main and on demand only: pushes to main are already covered, because the
+# release workflow runs these same tests before building the APK.
+on:
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "fastlane/**"
+      - "LICENSE"
+  workflow_dispatch:
+
+concurrency:
+  group: unit-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run unit tests
+        run: ./gradlew testFossDebugUnitTest
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: app/build/test-results/testFossDebugUnitTest/*.xml
+          if-no-files-found: ignore

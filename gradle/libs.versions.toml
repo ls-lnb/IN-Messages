@@ -22,6 +22,8 @@ mmslib = "1.0.0"
 indicator-fast-scroll = "4524cd0b61"
 #Gradle
 gradlePlugins-agp = "9.3.1"
+#Testing
+junit = "4.13.2"
 #build
 app-build-compileSDKVersion = "36"
 app-build-targetSDK = "36"
@@ -50,6 +52,8 @@ mmslib = { module = "org.fossify:mmslib", version.ref = "mmslib" }
 eventbus = { module = "org.greenrobot:eventbus", version.ref = "eventbus" }
 #Helpers
 ez-vcard = { module = "com.googlecode.ez-vcard:ez-vcard", version.ref = "ez-vcard" }
+#Testing
+junit = { module = "junit:junit", version.ref = "junit" }
 #Kotlin
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 [bundles]

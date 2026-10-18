@@ -57,6 +57,22 @@ class Config(context: Context) : BaseConfig(context) {
         set(lockScreenVisibilitySetting) = prefs.edit()
             .putInt(LOCK_SCREEN_VISIBILITY, lockScreenVisibilitySetting).apply()
 
+    var detectOtpCodes: Boolean
+        get() = prefs.getBoolean(OTP_DETECTION, true)
+        set(detectOtpCodes) = prefs.edit().putBoolean(OTP_DETECTION, detectOtpCodes).apply()
+
+    var otpKeywords: Set<String>
+        get() = prefs.getStringSet(OTP_KEYWORDS, HashSet<String>())!!
+        set(otpKeywords) = prefs.edit().putStringSet(OTP_KEYWORDS, otpKeywords).apply()
+
+    fun addOtpKeyword(keyword: String) {
+        otpKeywords = otpKeywords.plus(keyword)
+    }
+
+    fun removeOtpKeyword(keyword: String) {
+        otpKeywords = otpKeywords.minus(keyword)
+    }
+
     var addToGroupSortOrder: Int
         get() = prefs.getInt(ADD_TO_GROUP_SORT_ORDER, SORT_GROUPS_BY_RECENT)
         set(addToGroupSortOrder) = prefs.edit()

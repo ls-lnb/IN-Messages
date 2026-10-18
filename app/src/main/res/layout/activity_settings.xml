@@ -42,22 +42,20 @@
                 android:layout_height="wrap_content"
                 android:text="@string/color_customization" />
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/settings_color_customization_holder"
+            <RelativeLayout
+                android:id="@+id/settings_app_colors_holder"
                 style="@style/SettingsHolderTextViewOneLinerStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <org.fossify.commons.views.MyTextView
-                    android:id="@+id/settings_color_customization_label"
+                    android:id="@+id/settings_app_colors_label"
                     style="@style/SettingsTextLabelStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/customize_colors"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:text="@string/customize_app_colors" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+            </RelativeLayout>
 
             <include
                 android:id="@+id/settings_color_customization_divider"
@@ -227,6 +225,44 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/settings_lock_screen_visibility_label"
                     tools:text="@string/sender_and_message" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_detect_otp_codes_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_detect_otp_codes"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/detect_otp_codes" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_otp_keywords_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_otp_keywords_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/otp_keywords" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_otp_keywords"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_otp_keywords_label"
+                    tools:text="Default formats only" />
 
             </RelativeLayout>
 

@@ -7,10 +7,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import org.fossify.commons.activities.ManageBlockedNumbersActivity
 import org.fossify.commons.dialogs.ChangeDateTimeFormatDialog
 import org.fossify.commons.dialogs.ConfirmationDialog
-import org.fossify.commons.dialogs.FeatureLockedDialog
 import org.fossify.commons.dialogs.RadioGroupDialog
 import org.fossify.commons.dialogs.SecurityDialog
-import org.fossify.commons.extensions.addLockedLabelIfNeeded
 import org.fossify.commons.extensions.beGone
 import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
@@ -19,7 +17,6 @@ import org.fossify.commons.extensions.getBlockedNumbers
 import org.fossify.commons.extensions.getCurrentFormattedDateTime
 import org.fossify.commons.extensions.getFontSizeText
 import org.fossify.commons.extensions.getProperPrimaryColor
-import org.fossify.commons.extensions.isOrWasThankYouInstalled
 import org.fossify.commons.extensions.showErrorToast
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.updateTextColors
@@ -122,7 +119,7 @@ class SettingsActivity : SimpleActivity() {
         super.onResume()
         setupTopAppBar(binding.settingsAppbar, NavigationIcon.Arrow)
 
-        setupCustomizeColors()
+        setupAppColors()
         setupCustomizeNotifications()
         setupUseEnglish()
         setupLanguage()
@@ -138,6 +135,8 @@ class SettingsActivity : SimpleActivity() {
         setupGroupMessageAsMMS()
         setupKeepConversationsArchived()
         setupLockScreenVisibility()
+        setupDetectOtpCodes()
+        setupOtpKeywords()
         setupMMSFileSizeLimit()
         setupUseRecycleBin()
         setupEmptyRecycleBin()
@@ -252,9 +251,9 @@ class SettingsActivity : SimpleActivity() {
         blockedNumbersAtPause = getBlockedNumbers().hashCode()
     }
 
-    private fun setupCustomizeColors() = binding.apply {
-        settingsColorCustomizationHolder.setOnClickListener {
-            startCustomizationActivity()
+    private fun setupAppColors() = binding.apply {
+        settingsAppColorsHolder.setOnClickListener {
+            startActivity(Intent(this@SettingsActivity, CustomizeColorsActivity::class.java))
         }
     }
 
@@ -290,31 +289,21 @@ class SettingsActivity : SimpleActivity() {
     }
 
     private fun setupManageBlockedNumbers() = binding.apply {
-        settingsManageBlockedNumbers.text =
-            addLockedLabelIfNeeded(org.fossify.commons.R.string.manage_blocked_numbers)
+        settingsManageBlockedNumbers.text = getString(org.fossify.commons.R.string.manage_blocked_numbers)
         settingsManageBlockedNumbersHolder.beVisible()
         settingsManageBlockedNumbersHolder.setOnClickListener {
-            if (isOrWasThankYouInstalled()) {
-                Intent(this@SettingsActivity, ManageBlockedNumbersActivity::class.java).apply {
-                    startActivity(this)
-                }
-            } else {
-                FeatureLockedDialog(this@SettingsActivity) { }
+            Intent(this@SettingsActivity, ManageBlockedNumbersActivity::class.java).apply {
+                startActivity(this)
             }
         }
     }
 
     private fun setupManageBlockedKeywords() = binding.apply {
-        settingsManageBlockedKeywords.text =
-            addLockedLabelIfNeeded(R.string.manage_blocked_keywords)
+        settingsManageBlockedKeywords.text = getString(R.string.manage_blocked_keywords)
 
         settingsManageBlockedKeywordsHolder.setOnClickListener {
-            if (isOrWasThankYouInstalled()) {
-                Intent(this@SettingsActivity, ManageBlockedKeywordsActivity::class.java).apply {
-                    startActivity(this)
-                }
-            } else {
-                FeatureLockedDialog(this@SettingsActivity) { }
+            Intent(this@SettingsActivity, ManageBlockedKeywordsActivity::class.java).apply {
+                startActivity(this)
             }
         }
     }
@@ -416,6 +405,26 @@ class SettingsActivity : SimpleActivity() {
                 config.lockScreenVisibilitySetting = it as Int
                 settingsLockScreenVisibility.text = getLockScreenVisibilityText()
             }
+        }
+    }
+
+    private fun setupDetectOtpCodes() = binding.apply {
+        settingsDetectOtpCodes.isChecked = config.detectOtpCodes
+        settingsDetectOtpCodesHolder.setOnClickListener {
+            settingsDetectOtpCodes.toggle()
+            config.detectOtpCodes = settingsDetectOtpCodes.isChecked
+        }
+    }
+
+    private fun setupOtpKeywords() = binding.apply {
+        settingsOtpKeywords.text = if (config.otpKeywords.isEmpty()) {
+            getString(R.string.otp_keywords_none)
+        } else {
+            getString(R.string.otp_keywords_count, config.otpKeywords.size)
+        }
+
+        settingsOtpKeywordsHolder.setOnClickListener {
+            startActivity(Intent(this@SettingsActivity, ManageOtpKeywordsActivity::class.java))
         }
     }
 

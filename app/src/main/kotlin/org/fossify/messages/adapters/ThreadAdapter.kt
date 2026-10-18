@@ -12,6 +12,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.graphics.drawable.toDrawable
@@ -35,7 +37,11 @@ import org.fossify.commons.extensions.beGone
 import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.copyToClipboard
+import org.fossify.commons.extensions.copyToClipboard
 import org.fossify.commons.extensions.formatDateOrTime
+import org.fossify.commons.extensions.getAlertDialogBuilder
+import org.fossify.commons.extensions.getProperPrimaryColor
+import org.fossify.commons.extensions.setupDialogStuff
 import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getTextSize
@@ -52,6 +58,7 @@ import org.fossify.messages.activities.NewConversationActivity
 import org.fossify.messages.activities.SimpleActivity
 import org.fossify.messages.activities.ThreadActivity
 import org.fossify.messages.activities.VCardViewerActivity
+import org.fossify.messages.databinding.DialogOtpCodeBinding
 import org.fossify.messages.databinding.ItemAttachmentDocumentBinding
 import org.fossify.messages.databinding.ItemAttachmentImageBinding
 import org.fossify.messages.databinding.ItemAttachmentVcardBinding
@@ -64,9 +71,12 @@ import org.fossify.messages.dialogs.DeleteConfirmationDialog
 import org.fossify.messages.dialogs.MessageDetailsDialog
 import org.fossify.messages.dialogs.SelectTextDialog
 import org.fossify.messages.extensions.config
+import org.fossify.messages.helpers.extractOtpCode
+import org.fossify.messages.helpers.withOtpUnderline
 import org.fossify.messages.extensions.getContactFromAddress
 import org.fossify.messages.extensions.highlightSearchMatches
 import org.fossify.messages.extensions.isImageMimeType
+import org.fossify.messages.extensions.isTouchOnTextRange
 import org.fossify.messages.extensions.isVCardMimeType
 import org.fossify.messages.extensions.isVideoMimeType
 import org.fossify.messages.extensions.launchViewIntent
@@ -351,7 +361,84 @@ class ThreadAdapter(
         } as ArrayList<ThreadItem>
     }
 
+    /** Renders the message text itself: search highlighting, the underlined OTP code and clicks. */
+    private fun setupMessageBody(binding: ItemMessageBinding, holder: ViewHolder, message: Message) {
+        binding.threadMessageBody.apply {
+            val otpCode = findOtpCode(message)
+            val otpStart = otpCode?.let { message.body.indexOf(it) } ?: -1
+            text = message.body.highlightSearchMatches(searchQuery).withOtpUnderline(otpCode)
+            alpha = if (highlightedMessageId != -1L && message.id == highlightedMessageId) 1f else {
+                if (searchQuery.isNotEmpty()) 0.85f else 1f
+            }
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
+            beVisibleIf(message.body.isNotEmpty())
+
+            var lastTouchX = 0f
+            var lastTouchY = 0f
+            setOnTouchListener { _, event ->
+                lastTouchX = event.x
+                lastTouchY = event.y
+                false
+            }
+
+            setOnLongClickListener {
+                if (!showOtpDialogIfClicked(this, otpCode, otpStart, lastTouchX, lastTouchY)) {
+                    holder.viewLongClicked()
+                }
+                true
+            }
+
+            setOnClickListener {
+                holder.viewClicked(message)
+            }
+        }
+    }
+
     private fun isThreadDateTime(position: Int) = currentList.getOrNull(position) is ThreadDateTime
+
+    /** The one time password in [message], or null when detection is off or there is none. */
+    private fun findOtpCode(message: Message): String? {
+        return if (activity.config.detectOtpCodes) message.body.extractOtpCode(activity.config.otpKeywords) else null
+    }
+
+    /**
+     * Shows the code with a copy button when the long press landed on the underlined code,
+     * otherwise lets the caller fall back to the regular long click.
+     */
+    private fun showOtpDialogIfClicked(
+        textView: TextView,
+        otpCode: String?,
+        otpStart: Int,
+        touchX: Float,
+        touchY: Float,
+    ): Boolean {
+        if (otpCode == null || otpStart == -1) {
+            return false
+        }
+        if (!textView.isTouchOnTextRange(touchX, touchY, otpStart, otpCode.length)) {
+            return false
+        }
+
+        val binding = DialogOtpCodeBinding.inflate(activity.layoutInflater)
+        var otpDialog: AlertDialog? = null
+        val primaryColor = activity.getProperPrimaryColor()
+        binding.otpDialogCode.apply {
+            text = activity.getString(R.string.otp_code, otpCode)
+            setTextColor(primaryColor)
+        }
+        binding.otpDialogCopy.apply {
+            applyColorFilter(primaryColor)
+            setOnClickListener {
+                activity.copyToClipboard(otpCode)
+                otpDialog?.dismiss()
+            }
+        }
+
+        activity.getAlertDialogBuilder().apply {
+            activity.setupDialogStuff(binding.root, this) { dialog -> otpDialog = dialog }
+        }
+        return true
+    }
 
     fun setSearchHighlight(query: String, messageId: Long) {
         if (searchQuery == query && highlightedMessageId == messageId) {
@@ -377,22 +464,7 @@ class ThreadAdapter(
     private fun setupView(holder: ViewHolder, view: View, message: Message) {
         ItemMessageBinding.bind(view).apply {
             threadMessageHolder.isSelected = selectedKeys.contains(message.getSelectionKey())
-            threadMessageBody.apply {
-                text = message.body.highlightSearchMatches(searchQuery)
-                alpha = if (highlightedMessageId != -1L && message.id == highlightedMessageId) 1f else {
-                    if (searchQuery.isNotEmpty()) 0.85f else 1f
-                }
-                setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
-                beVisibleIf(message.body.isNotEmpty())
-                setOnLongClickListener {
-                    holder.viewLongClicked()
-                    true
-                }
-
-                setOnClickListener {
-                    holder.viewClicked(message)
-                }
-            }
+            setupMessageBody(this, holder, message)
 
             if (message.isReceivedMessage()) {
                 setupReceivedMessageView(messageBinding = this, message = message)
