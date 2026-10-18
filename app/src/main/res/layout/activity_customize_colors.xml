@@ -36,6 +36,35 @@
             android:paddingBottom="@dimen/normal_margin">
 
             <RelativeLayout
+                android:id="@+id/colors_system_theme_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/colors_system_theme"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/follow_system_colors" />
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/colors_system_theme_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/activity_margin"
+                android:paddingTop="@dimen/small_margin"
+                android:paddingEnd="@dimen/activity_margin"
+                android:text="@string/follow_system_colors_hint"
+                android:textSize="@dimen/normal_text_size"
+                android:alpha="0.7"
+                android:visibility="gone"
+                tools:ignore="MissingPrefix" />
+
+            <RelativeLayout
                 android:id="@+id/colors_primary_holder"
                 style="@style/SettingsHolderTextViewOneLinerStyle"
                 android:layout_width="match_parent"
@@ -51,6 +80,7 @@
 
                 <ImageView
                     android:id="@+id/colors_primary_swatch"
+                    android:background="@drawable/circle_outline"
                     android:layout_width="@dimen/normal_icon_size"
                     android:layout_height="@dimen/normal_icon_size"
                     android:layout_alignParentEnd="true"
@@ -77,6 +107,7 @@
 
                 <ImageView
                     android:id="@+id/colors_text_swatch"
+                    android:background="@drawable/circle_outline"
                     android:layout_width="@dimen/normal_icon_size"
                     android:layout_height="@dimen/normal_icon_size"
                     android:layout_alignParentEnd="true"
@@ -103,6 +134,7 @@
 
                 <ImageView
                     android:id="@+id/colors_background_swatch"
+                    android:background="@drawable/circle_outline"
                     android:layout_width="@dimen/normal_icon_size"
                     android:layout_height="@dimen/normal_icon_size"
                     android:layout_alignParentEnd="true"
@@ -129,6 +161,7 @@
 
                 <ImageView
                     android:id="@+id/colors_icon_swatch"
+                    android:background="@drawable/circle_outline"
                     android:layout_width="@dimen/normal_icon_size"
                     android:layout_height="@dimen/normal_icon_size"
                     android:layout_alignParentEnd="true"

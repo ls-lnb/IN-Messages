@@ -1,13 +1,12 @@
 package org.fossify.messages.activities
 
-import android.content.ComponentName
-import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import android.os.Bundle
+import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.updateTextColors
+import org.fossify.commons.helpers.isSPlus
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.NavigationIcon
 import org.fossify.messages.R
@@ -16,8 +15,7 @@ import org.fossify.messages.dialogs.AppColorPickerDialog
 import org.fossify.messages.databinding.ActivityCustomizeColorsBinding
 import org.fossify.messages.extensions.config
 import org.fossify.messages.helpers.appColorPalette
-import org.fossify.messages.helpers.colorDistance
-import org.fossify.messages.helpers.AppIconVariant
+import org.fossify.messages.helpers.AppIconSwitcher
 import org.fossify.messages.helpers.appIconVariants
 import org.fossify.messages.helpers.defaultAppIconVariant
 
@@ -29,13 +27,17 @@ import org.fossify.messages.helpers.defaultAppIconVariant
  *
  * The app icon is different: it is one of the launcher aliases declared in the manifest, so
  * choosing one enables that alias and disables the rest, which is what makes the launcher icon
- * change. Commons' own helper for this reads R.array.app_icon_colors, an array this app never
- * defined, so the switching is done here.
+ * change. That switching lives in AppIconSwitcher.
  *
  * A colour of 0 means "use the theme default", which is what the reset action writes.
+ *
+ * On Android 12+ commons resolves every colour through the system theme first, so a colour picked
+ * while that is on would be stored and then ignored. The switch on this screen turns it off, and
+ * picking a colour does the same, so a colour never appears to do nothing.
  */
 class CustomizeColorsActivity : SimpleActivity() {
     private val binding by viewBinding(ActivityCustomizeColorsBinding::inflate)
+    private val iconSwitcher by lazy { AppIconSwitcher(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +48,7 @@ class CustomizeColorsActivity : SimpleActivity() {
             topAppBar = binding.colorsAppbar
         )
         setupOptionsMenu()
+        setupSystemThemeRow()
 
         binding.colorsPrimaryHolder.setOnClickListener {
             pickColor(config.primaryColor, getProperPrimaryColor()) { config.primaryColor = it }
@@ -61,13 +64,14 @@ class CustomizeColorsActivity : SimpleActivity() {
             runCatching {
                 AppColorPickerDialog(
                     this,
-                    currentIconVariant().color,
+                    iconSwitcher.current().color,
                     appIconVariants.map { it.color },
-                    iconPreview = variantIconDrawable(),
+                    iconPreview = iconSwitcher.iconDrawable(),
                     showShades = false
                 ) { wasPositive, color ->
                     if (wasPositive) {
-                        applyIconVariant(closestIconVariant(color))
+                        iconSwitcher.apply(iconSwitcher.closest(color))
+                        updateColors()
                     }
                 }
             }.onFailure { toast("Icon picker failed: $it") }
@@ -86,11 +90,21 @@ class CustomizeColorsActivity : SimpleActivity() {
                 config.primaryColor = 0
                 config.textColor = 0
                 config.backgroundColor = 0
-                applyIconVariant(defaultAppIconVariant)
+                iconSwitcher.apply(defaultAppIconVariant)
                 updateColors()
                 true
             } else {
                 false
+            }
+        }
+    }
+
+    private fun setupSystemThemeRow() {
+        binding.colorsSystemThemeHolder.beVisibleIf(isSPlus())
+        binding.colorsSystemTheme.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked != config.isSystemThemeEnabled) {
+                config.isSystemThemeEnabled = isChecked
+                recreate()
             }
         }
     }
@@ -108,63 +122,34 @@ class CustomizeColorsActivity : SimpleActivity() {
             ) { wasPositive, newColor ->
                 if (wasPositive) {
                     apply(newColor)
+                    stopFollowingSystemColors()
                     updateColors()
                 }
             }
         }.onFailure { toast("Colour picker failed: $it") }
     }
 
+    /**
+     * A picked colour cannot take effect while the system theme owns the colours on Android 12+,
+     * so following it is turned off here rather than leaving the pick looking broken.
+     */
+    private fun stopFollowingSystemColors() {
+        if (!isSPlus() || !config.isSystemThemeEnabled) {
+            return
+        }
+
+        config.isSystemThemeEnabled = false
+        toast(R.string.stopped_following_system_colors)
+        recreate()
+    }
+
     private fun updateColors() {
         updateTextColors(binding.colorsHolder)
+        binding.colorsSystemTheme.isChecked = config.isSystemThemeEnabled
+        binding.colorsSystemThemeHint.beVisibleIf(config.isSystemThemeEnabled)
         binding.colorsPrimarySwatch.setColorFilter(getProperPrimaryColor())
         binding.colorsTextSwatch.setColorFilter(getProperTextColor())
         binding.colorsBackgroundSwatch.setColorFilter(getProperBackgroundColor())
-        binding.colorsIconSwatch.setColorFilter(currentIconVariant().color)
-    }
-
-    /** The alias the launcher is currently using; falls back to the shipped one. */
-    private fun currentIconVariant(): AppIconVariant {
-        val manager = packageManager
-        return appIconVariants.firstOrNull { variant ->
-            manager.getComponentEnabledSetting(iconComponent(variant)) ==
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-        } ?: defaultAppIconVariant
-    }
-
-    private fun closestIconVariant(color: Int): AppIconVariant {
-        return appIconVariants.firstOrNull { it.color == color }
-            ?: appIconVariants.minByOrNull { colorDistance(it.color, color) }
-            ?: defaultAppIconVariant
-    }
-
-    /** Enables the chosen alias and disables the rest, which is what changes the launcher icon. */
-    private fun applyIconVariant(variant: AppIconVariant) {
-        val manager = packageManager
-        appIconVariants.forEach { other ->
-            val state = if (other == variant) {
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            } else {
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-            }
-            manager.setComponentEnabledSetting(iconComponent(other), state, PackageManager.DONT_KILL_APP)
-        }
-
-        config.appIconColor = variant.color
-        updateColors()
-    }
-
-    private fun iconComponent(variant: AppIconVariant): ComponentName {
-        return ComponentName(packageName, "$packageName.activities.SplashActivity.${variant.name}")
-    }
-
-    /** The launcher icon for [variant], used as the preview in the app icon picker. */
-    private fun variantIconDrawable(variant: AppIconVariant = currentIconVariant()): Drawable? {
-        val name = if (variant == defaultAppIconVariant) {
-            "ic_launcher"
-        } else {
-            "ic_launcher_${variant.name.lowercase()}"
-        }
-        val iconRes = resources.getIdentifier(name, "mipmap", packageName)
-        return if (iconRes == 0) null else getDrawable(iconRes)
+        binding.colorsIconSwatch.setColorFilter(iconSwitcher.current().color)
     }
 }
