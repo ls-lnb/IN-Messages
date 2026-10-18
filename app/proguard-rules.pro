@@ -53,9 +53,9 @@
     public static void showModdedAppWarning(org.fossify.commons.activities.BaseSimpleActivity);
 }
 
-# The compose based screens run the same check from the shared theme wrapper
-# (AppTheme -> FakeVersionCheck), which is what fires when a compose dialog - such as the
-# customization screen - is opened.
--assumenosideeffects class org.fossify.commons.compose.extensions.ComposeActivityExtensionsKt {
-    public static void FakeVersionCheck(androidx.compose.runtime.Composer, int);
-}
+# Deliberately NOT suppressed: the same warning also exists as a composable
+# (AppTheme -> FakeVersionCheck). -assumenosideeffects on a @Composable is a lie - composables
+# write group bookkeeping to the composer, so removing the call unbalances the composition and
+# breaks the compose screens (that is what stopped the colour customization from working).
+# That variant is rare (it only shows inside commons' compose dialogs) and is handled by
+# keeping the code intact.
