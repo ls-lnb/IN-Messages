@@ -6,7 +6,9 @@ This is a fork of [Fossify Messages](https://github.com/FossifyOrg/Messages), th
 
 ## What this fork adds
 
-All of the base app's features, plus **sender grouping** and **one time password handling**, aimed at short-code clutter (banks, delivery services, promotions — especially Indian short codes).
+All of the base app's features, plus **sender grouping**, **one time password handling** and **colour customisation**, aimed at short-code clutter (banks, delivery services, promotions — especially Indian short codes).
+
+It installs as **IN Messages** (`com.blinkingblue.inmessages`), so it can sit alongside the original app.
 
 ### Sender grouping
 
@@ -43,8 +45,14 @@ All of the base app's features, plus **sender grouping** and **one time password
 - **Codes may sit either side of a phrase**, up to 80 characters away, and the nearest candidate wins.
 - **Your own formats** — "Detect one time passwords" switches the feature on or off, and the OTP keywords screen adds your own phrases with a live sample-message preview while listing the built-in formats read-only. Codes stay hidden when lock-screen visibility is set to show nothing.
 
+### Colours
+
+- **Pick the app's colours** — Settings → *Customize colours* sets the primary, text and background colours, each with a live swatch, plus the launcher icon colour in its own section. **Reset colours** restores the app's own defaults and leaves the icon alone.
+- **Follow system colours** — on Android 12+ the app can take its colours from your wallpaper instead. While that is on, the colour rows and reset are disabled, because the system theme would override anything picked.
+- **Picked colours stick** — a colour applies immediately, does not change with day or night, and if a pick would leave the text unreadable the other colour is matched to it, with a note saying so. The launcher icon offers 19 built-in colours; some launchers cache the icon until it is tapped.
+
 ### Development
 
-- **Unit tests, including a message corpus** — `OtpDetectorTest` covers formats and the amount/date/masked-number rules; `OtpCorpusTest` replays 375 real-shaped messages (21 with a code, 354 without). Run them with `./gradlew testFossDebugUnitTest`.
+- **Unit tests, including a message corpus** — `OtpDetectorTest` covers formats and the amount/date/masked-number rules; `OtpCorpusTest` replays 391 real-shaped messages (30 with a code, 361 without). Run them with `./gradlew testFossDebugUnitTest`.
 - **Corpus sources**, with thanks and their licences: [skyaara/indian-payment-sms-dataset](https://github.com/skyaara/indian-payment-sms-dataset) (CC BY 4.0), [abhirajsinha/omoi-sms-parser](https://github.com/abhirajsinha/omoi-sms-parser) (MIT) and [akhilnarang/bank-sms-parser](https://github.com/akhilnarang/bank-sms-parser) (MIT), plus messages received on the device. Provenance is recorded in `app/src/test/resources/otp-corpus.tsv`.
 - **CI** — the tests run on pull requests to `main` and gate the release build; a universal APK is released on every push to `main`. Work lands on `develop` first.
