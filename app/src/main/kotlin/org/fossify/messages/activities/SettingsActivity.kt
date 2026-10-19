@@ -12,7 +12,6 @@ import org.fossify.commons.dialogs.SecurityDialog
 import org.fossify.commons.extensions.beGone
 import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
-import org.fossify.commons.extensions.formatWithDeprecatedBadge
 import org.fossify.commons.extensions.getBlockedNumbers
 import org.fossify.commons.extensions.getCurrentFormattedDateTime
 import org.fossify.commons.extensions.getFontSizeText
@@ -36,8 +35,6 @@ import org.fossify.messages.R
 import org.fossify.messages.databinding.ActivitySettingsBinding
 import org.fossify.messages.dialogs.ExportMessagesDialog
 import org.fossify.messages.extensions.config
-import org.fossify.messages.extensions.emptyMessagesRecycleBin
-import org.fossify.messages.extensions.messagesDB
 import org.fossify.messages.helpers.Config
 import org.fossify.messages.helpers.FILE_SIZE_100_KB
 import org.fossify.messages.helpers.FILE_SIZE_1_MB
@@ -60,7 +57,6 @@ import kotlin.system.exitProcess
 
 class SettingsActivity : SimpleActivity() {
     private var blockedNumbersAtPause = -1
-    private var recycleBinMessages = 0
     private val messagesFileType = "application/json"
     private val messageImportFileTypes = buildList {
         add("application/json")
@@ -138,8 +134,6 @@ class SettingsActivity : SimpleActivity() {
         setupDetectOtpCodes()
         setupOtpKeywords()
         setupMMSFileSizeLimit()
-        setupUseRecycleBin()
-        setupEmptyRecycleBin()
         setupAppPasswordProtection()
         setupMessagesExport()
         setupMessagesImport()
@@ -159,7 +153,6 @@ class SettingsActivity : SimpleActivity() {
             binding.settingsOutgoingMessagesLabel,
             binding.settingsNotificationsLabel,
             binding.settingsArchivedMessagesLabel,
-            binding.settingsRecycleBinLabel,
             binding.settingsSecurityLabel,
             binding.settingsMigratingLabel
         ).forEach {
@@ -453,62 +446,6 @@ class SettingsActivity : SimpleActivity() {
             RadioGroupDialog(this@SettingsActivity, items, checkedItemId) {
                 config.mmsFileSizeLimit = it as Long
                 settingsMmsFileSizeLimit.text = getMMSFileLimitText()
-            }
-        }
-    }
-
-    private fun setupUseRecycleBin() = binding.apply {
-        updateRecycleBinButtons()
-        settingsUseRecycleBin.isChecked = config.useRecycleBin
-        settingsUseRecycleBin.text = formatWithDeprecatedBadge(
-            labelRes = org.fossify.commons.R.string.move_items_into_recycle_bin
-        )
-        settingsUseRecycleBinHolder.setOnClickListener {
-            settingsUseRecycleBin.toggle()
-            config.useRecycleBin = settingsUseRecycleBin.isChecked
-            updateRecycleBinButtons()
-        }
-    }
-
-    private fun updateRecycleBinButtons() = binding.apply {
-        settingsEmptyRecycleBinHolder.beVisibleIf(config.useRecycleBin)
-    }
-
-    private fun setupEmptyRecycleBin() = binding.apply {
-        ensureBackgroundThread {
-            recycleBinMessages = messagesDB.getArchivedCount()
-            runOnUiThread {
-                settingsEmptyRecycleBinSize.text =
-                    resources.getQuantityString(
-                        R.plurals.delete_messages,
-                        recycleBinMessages,
-                        recycleBinMessages
-                    )
-            }
-        }
-
-        settingsEmptyRecycleBinHolder.setOnClickListener {
-            if (recycleBinMessages == 0) {
-                toast(org.fossify.commons.R.string.recycle_bin_empty)
-            } else {
-                ConfirmationDialog(
-                    activity = this@SettingsActivity,
-                    message = "",
-                    messageId = R.string.empty_recycle_bin_messages_confirmation,
-                    positive = org.fossify.commons.R.string.yes,
-                    negative = org.fossify.commons.R.string.no
-                ) {
-                    ensureBackgroundThread {
-                        emptyMessagesRecycleBin()
-                    }
-                    recycleBinMessages = 0
-                    settingsEmptyRecycleBinSize.text =
-                        resources.getQuantityString(
-                            R.plurals.delete_messages,
-                            recycleBinMessages,
-                            recycleBinMessages
-                        )
-                }
             }
         }
     }
