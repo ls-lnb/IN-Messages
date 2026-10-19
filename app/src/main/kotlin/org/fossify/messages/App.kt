@@ -1,6 +1,9 @@
 package org.fossify.messages
 
+import android.app.Activity
+import android.app.Application
 import android.database.ContentObserver
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -14,6 +17,7 @@ import org.fossify.commons.extensions.toast
 import org.fossify.commons.helpers.PERMISSION_READ_CONTACTS
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.messages.extensions.config
+import org.fossify.messages.extensions.dismissOpenToolbarPopups
 import org.fossify.messages.extensions.rescheduleAllScheduledMessages
 import org.fossify.messages.helpers.APP_SIDELOADING_STATUS_OK
 import org.fossify.messages.helpers.MessagingCache
@@ -27,6 +31,7 @@ class App : FossifyApp() {
     override fun onCreate() {
         super.onCreate()
         installCrashReporter()
+        installPopupDismissal()
         // This fork is not Fossify's signed build, so commons' canary check would report it as a
         // corrupt version and send the user to Fossify's download page. Marking the build as
         // verified short-circuits that check, in the splash screen and everywhere else.
@@ -47,6 +52,24 @@ class App : FossifyApp() {
         ensureBackgroundThread {
             rescheduleAllScheduledMessages()
         }
+    }
+
+    /**
+     * The toolbar overflow popup outlives the activity while it is only paused, so it is still on
+     * screen when the app is reopened later. Closing it here keeps every screen honest without
+     * each activity having to remember.
+     */
+    private fun installPopupDismissal() {
+        registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityPaused(activity: Activity) = activity.dismissOpenToolbarPopups()
+
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+            override fun onActivityStarted(activity: Activity) = Unit
+            override fun onActivityResumed(activity: Activity) = Unit
+            override fun onActivityStopped(activity: Activity) = Unit
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+            override fun onActivityDestroyed(activity: Activity) = Unit
+        })
     }
 
     /**

@@ -5,6 +5,8 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.provider.ContactsContract
+import android.view.ViewGroup
+import androidx.appcompat.widget.Toolbar
 import org.fossify.commons.activities.BaseSimpleActivity
 import org.fossify.commons.extensions.getMimeType
 import org.fossify.commons.extensions.hideKeyboard
@@ -131,5 +133,23 @@ fun Activity.launchSenderPicker(
         )
         putExtra(SIMILAR_SEED_ADDRESS, seedAddress)
         startActivity(this)
+    }
+}
+
+/**
+ * A toolbar overflow popup is a window of its own, so it is not closed when the activity is only
+ * paused. Switch to another app with the menu open and it is still on screen when the app is
+ * reopened hours later. Every toolbar in the activity is asked to close its popups.
+ */
+fun Activity.dismissOpenToolbarPopups() {
+    (window?.decorView as? ViewGroup)?.let { dismissOpenToolbarPopups(it) }
+}
+
+private fun dismissOpenToolbarPopups(group: ViewGroup) {
+    for (index in 0 until group.childCount) {
+        when (val child = group.getChildAt(index)) {
+            is Toolbar -> child.dismissPopupMenus()
+            is ViewGroup -> dismissOpenToolbarPopups(child)
+        }
     }
 }
