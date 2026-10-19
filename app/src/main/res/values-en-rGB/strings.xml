@@ -22,4 +22,5 @@
     <string name="app_icon_color">App icon colour</string>
     <string name="text_color_matched_to_background">Text colour matched the background so it stays readable</string>
     <string name="background_color_matched_to_text">Background colour matched the text so it stays readable</string>
+    <string name="about_licenses">Third-party licences</string>
 </resources>
