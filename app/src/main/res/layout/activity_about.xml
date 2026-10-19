@@ -47,7 +47,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/medium_margin"
                 android:gravity="center"
-                android:text="@string/app_name"
+                android:text="@string/app_launcher_name"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -59,19 +59,21 @@
                 android:gravity="center"
                 tools:text="Version 1.9.1 (23)" />
 
-            <org.fossify.commons.views.MyTextView
-                android:id="@+id/about_faq_label"
-                style="@style/SettingsSectionLabelStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/normal_margin"
-                android:text="@string/frequently_asked_questions" />
-
-            <LinearLayout
+            <RelativeLayout
                 android:id="@+id/about_faq_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:layout_marginTop="@dimen/normal_margin">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/about_faq"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/frequently_asked_questions" />
+
+            </RelativeLayout>
 
             <include layout="@layout/divider" />
 

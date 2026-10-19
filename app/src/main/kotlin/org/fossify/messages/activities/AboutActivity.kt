@@ -2,9 +2,9 @@ package org.fossify.messages.activities
 
 import android.content.Intent
 import android.os.Bundle
+import org.fossify.commons.activities.FAQActivity
 import org.fossify.commons.activities.LicenseActivity
 import org.fossify.commons.extensions.getProperBackgroundColor
-import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.launchViewIntent
 import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
@@ -16,7 +16,6 @@ import org.fossify.commons.models.FAQItem
 import org.fossify.messages.BuildConfig
 import org.fossify.messages.R
 import org.fossify.messages.databinding.ActivityAboutBinding
-import org.fossify.messages.databinding.ItemAboutFaqEntryBinding
 import org.fossify.messages.helpers.AppIconSwitcher
 
 /**
@@ -32,7 +31,9 @@ class AboutActivity : SimpleActivity() {
         const val REPOSITORY_URL = "https://github.com/ls-lnb/messages-lnb"
         const val ISSUES_URL = "$REPOSITORY_URL/issues"
 
-        // commons' LicenseActivity reads its mask under this key, and exposes no setter for it.
+        // commons' FAQActivity and LicenseActivity read their input under these keys, and
+        // expose no setters for them.
+        const val EXTRA_FAQ = "app_faq"
         const val EXTRA_LICENSES = "app_licenses"
         val LICENSES = LICENSE_EVENT_BUS or LICENSE_SMS_MMS or LICENSE_INDICATOR_FAST_SCROLL
     }
@@ -53,8 +54,7 @@ class AboutActivity : SimpleActivity() {
             BuildConfig.VERSION_CODE
         )
 
-        fillFaq()
-
+        binding.aboutFaqHolder.setOnClickListener { launchFaq() }
         binding.aboutIssuesHolder.setOnClickListener { launchViewIntent(ISSUES_URL) }
         binding.aboutGithubHolder.setOnClickListener { launchViewIntent(REPOSITORY_URL) }
         binding.aboutLicensesHolder.setOnClickListener { launchLicenses() }
@@ -65,26 +65,6 @@ class AboutActivity : SimpleActivity() {
         setupTopAppBar(binding.aboutAppbar, NavigationIcon.Arrow, topBarColor = getProperBackgroundColor())
         binding.aboutCoordinator.setBackgroundColor(getProperBackgroundColor())
         updateTextColors(binding.aboutNestedScrollview)
-        binding.aboutFaqLabel.setTextColor(getProperPrimaryColor())
-    }
-
-    private fun fillFaq() {
-        faqItems().forEach { item ->
-            val entry = ItemAboutFaqEntryBinding.inflate(
-                layoutInflater,
-                binding.aboutFaqHolder,
-                false
-            )
-            entry.faqEntryTitle.text = resolve(item.title)
-            entry.faqEntryText.text = resolve(item.text)
-            binding.aboutFaqHolder.addView(entry.root)
-        }
-    }
-
-    private fun resolve(text: Any): String = when (text) {
-        is Int -> getString(text)
-        is String -> text
-        else -> ""
     }
 
     private fun faqItems(): List<FAQItem> {
@@ -115,6 +95,12 @@ class AboutActivity : SimpleActivity() {
         return items
     }
 
+    private fun launchFaq() {
+        startActivity(
+            Intent(this, FAQActivity::class.java)
+                .putExtra(EXTRA_FAQ, ArrayList(faqItems()))
+        )
+    }
     private fun launchLicenses() {
         startActivity(
             Intent(this, LicenseActivity::class.java).putExtra(EXTRA_LICENSES, LICENSES)
