@@ -17,7 +17,7 @@ jobs:
     env:
       # Signed, minified release when signing secrets are configured, otherwise
       # an installable debug-signed APK (same .debug application id you already use).
-      HAS_SIGNING: ${{ secrets.SIGNING_STORE_FILE != '' }}
+      HAS_SIGNING: ${{ secrets.SIGNING_KEYSTORE_B64 != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,14 +62,18 @@ jobs:
             echo "::error::No installable APK was produced"
             exit 1
           fi
-          echo "path=$apk" >> "$GITHUB_OUTPUT"
-          ls -lh "$apk"
+          version=$(grep -oP '(?<=^VERSION_NAME=).*' gradle.properties)
+          named="IN Messages $version.apk"
+          cp "$apk" "$named"
+          echo "path=$named" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          ls -lh "$named"
 
       - name: Create GitHub release with APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: "Messages APK #${{ github.run_number }}"
+          name: "IN Messages ${{ steps.apk.outputs.version }} (#${{ github.run_number }})"
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
           files: ${{ steps.apk.outputs.path }}
