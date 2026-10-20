@@ -2,7 +2,7 @@
 
 <img alt="Logo" src="graphics/icon.webp" width="120" />
 
-IN Messages is a fork of [Fossify Messages](https://github.com/FossifyOrg/Messages), built particularly for Indian users and the way messages arrive here: banks, cards, brokers, wallets, deliveries and utilities each write from their own short code, so a day's inbox is a wall of near-identical alerts.
+IN Messages is a fork of [Fossify Messages](https://github.com/FossifyOrg/Messages), built particularly for Indian users and the way messages arrive here: banks, cards, brokers, wallets, deliveries and utilities each write from several short codes (e.g. AX-HDFCBK, JK-HDFCBK, VA-HDFCBK etc.) so the inbox becomes cluttered. This app also provides first class support for easy visibility and copy of OTP codes.
 
 It keeps everything the base app does — no ads, no internet permission for SMS, material design with dark theme, message blocking, SMS/MMS backup and restore, and efficient search — and adds **sender grouping**, **one time password handling** and **colour customisation** for that clutter. For everything about the base app, see the [Fossify Messages README](https://github.com/FossifyOrg/Messages#readme).
 
