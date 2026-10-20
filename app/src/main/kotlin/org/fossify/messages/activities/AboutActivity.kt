@@ -5,6 +5,7 @@ import android.os.Bundle
 import org.fossify.commons.activities.FAQActivity
 import org.fossify.commons.activities.LicenseActivity
 import org.fossify.commons.extensions.getProperBackgroundColor
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.launchViewIntent
 import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
@@ -29,6 +30,7 @@ class AboutActivity : SimpleActivity() {
 
     private companion object {
         const val REPOSITORY_URL = "https://github.com/ls-lnb/messages-lnb"
+        const val UPSTREAM_URL = "https://github.com/FossifyOrg/Messages"
         const val ISSUES_URL = "$REPOSITORY_URL/issues"
 
         // commons' FAQActivity and LicenseActivity read their input under these keys, and
@@ -54,10 +56,12 @@ class AboutActivity : SimpleActivity() {
             BuildConfig.VERSION_CODE
         )
 
+        binding.aboutForkCredit.setOnClickListener { launchViewIntent(UPSTREAM_URL) }
         binding.aboutFaqHolder.setOnClickListener { launchFaq() }
         binding.aboutIssuesHolder.setOnClickListener { launchViewIntent(ISSUES_URL) }
         binding.aboutGithubHolder.setOnClickListener { launchViewIntent(REPOSITORY_URL) }
         binding.aboutLicensesHolder.setOnClickListener { launchLicenses() }
+        binding.aboutLicenseHolder.setOnClickListener { launchViewIntent(REPOSITORY_URL) }
     }
 
     override fun onResume() {
@@ -65,6 +69,7 @@ class AboutActivity : SimpleActivity() {
         setupTopAppBar(binding.aboutAppbar, NavigationIcon.Arrow, topBarColor = getProperBackgroundColor())
         binding.aboutCoordinator.setBackgroundColor(getProperBackgroundColor())
         updateTextColors(binding.aboutNestedScrollview)
+        binding.aboutForkCredit.setTextColor(getProperPrimaryColor())
     }
 
     private fun faqItems(): List<FAQItem> {

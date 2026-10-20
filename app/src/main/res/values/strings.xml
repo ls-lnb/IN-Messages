@@ -192,11 +192,14 @@
     <!-- About -->
     <string name="about_version_format">Version %1$s (%2$d)</string>
     <string name="frequently_asked_questions">Frequently Asked Questions</string>
+    <string name="about_fork_credit">Fork of Fossify Messages\nThanks to the Fossify team for the original app. Please consider supporting them.</string>
     <string name="about_known_issues">Known issues</string>
     <string name="about_support_email">Support email</string>
     <string name="about_support_email_address">inmessages@blinkingblue.com</string>
     <string name="about_github">GitHub</string>
     <string name="about_licenses">Third-party licenses</string>
+    <string name="about_license">Licence and source</string>
+    <string name="about_license_value">GNU GPL-3.0 · github.com/ls-lnb/messages-lnb</string>
     <!--
         Haven't found some strings? There's more at
         https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res
