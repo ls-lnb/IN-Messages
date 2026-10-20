@@ -57,7 +57,17 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/small_margin"
                 android:gravity="center"
-                tools:text="Version 1.9.1 (23)" />
+                tools:text="Version 0.9.1 (24)" />
+
+            <org.fossify.commons.views.MyTextView
+                android:id="@+id/about_fork_credit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/medium_margin"
+                android:gravity="center"
+                android:paddingStart="@dimen/activity_margin"
+                android:paddingEnd="@dimen/activity_margin"
+                android:text="@string/about_fork_credit" />
 
             <RelativeLayout
                 android:id="@+id/about_faq_holder"

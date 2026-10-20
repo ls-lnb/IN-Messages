@@ -192,6 +192,7 @@
     <!-- About -->
     <string name="about_version_format">Version %1$s (%2$d)</string>
     <string name="frequently_asked_questions">Frequently Asked Questions</string>
+    <string name="about_fork_credit">Fork of Fossify Messages\nThanks to the Fossify team for the original app. Please consider supporting them.</string>
     <string name="about_known_issues">Known issues</string>
     <string name="about_support_email">Support email</string>
     <string name="about_support_email_address">inmessages@blinkingblue.com</string>

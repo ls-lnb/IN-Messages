@@ -56,3 +56,16 @@ It installs as **IN Messages** (`com.blinkingblue.inmessages`), so it can sit al
 - **Unit tests, including a message corpus** — `OtpDetectorTest` covers formats and the amount/date/masked-number rules; `OtpCorpusTest` replays 391 real-shaped messages (30 with a code, 361 without). Run them with `./gradlew testFossDebugUnitTest`.
 - **Corpus sources**, with thanks and their licences: [skyaara/indian-payment-sms-dataset](https://github.com/skyaara/indian-payment-sms-dataset) (CC BY 4.0), [abhirajsinha/omoi-sms-parser](https://github.com/abhirajsinha/omoi-sms-parser) (MIT) and [akhilnarang/bank-sms-parser](https://github.com/akhilnarang/bank-sms-parser) (MIT), plus messages received on the device. Provenance is recorded in `app/src/test/resources/otp-corpus.tsv`.
 - **CI** — the tests run on pull requests to `main` and gate the release build; a universal APK is released on every push to `main`. Work lands on `develop` first.
+
+## Licence and credits
+
+This is a fork of [Fossify Messages](https://github.com/FossifyOrg/Messages), which is licensed under the **GNU General Public License v3.0**. The fork keeps that licence, and `LICENSE` here is the upstream text verbatim.
+
+In practice, publishing a build from this repository means:
+
+- **the licence travels with the code** — anyone who receives an APK gets the same GPL-3.0 rights to it, and a copy of the licence stays in the repository
+- **the modifications are marked** — what this fork changes is listed under [What this fork adds](#what-this-fork-adds) and in the commit history, with the corresponding source in this repository
+- **no extra restrictions** — nothing is added on top of GPL-3.0, and the app stays free to inspect, modify and redistribute under the same terms
+- **credit and no implied endorsement** — Fossify's name and icon are theirs, not part of the licence, so this fork ships under its own name and icon, and it is not affiliated with or endorsed by Fossify
+
+The bundled libraries keep their own licences, shown in the app under *About → Third-party licenses*. The OTP corpus sources are credited above.
