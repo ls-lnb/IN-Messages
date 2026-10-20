@@ -154,5 +154,6 @@ Two foregrounds ship, named for the background they are drawn on:
 
 - `ic_launcher_foreground_on_dark.xml` — white mark, used on the thirteen backgrounds
   from red through grey black, where white clears 2.5:1
-- `ic_launcher_foreground_on_light.xml` — `#1A1A1A` mark, used on amber, cyan, light
-  green, lime, orange and yellow, where white measures 2.30:1 or worse
+- `ic_launcher_foreground_on_light.xml` — `#1A1A1A` mark, used on amber, light green, lime,
+  orange and yellow — the colours where white measures below 2.2:1. Cyan was moved to
+  the white group after checking it on the device, at 2.30:1
