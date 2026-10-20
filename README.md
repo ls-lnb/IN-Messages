@@ -49,13 +49,21 @@ It installs as **IN Messages** (`com.blinkingblue.inmessages`), so it can sit al
 
 - **Pick the app's colours** — Settings → *Customize colours* sets the primary, text and background colours, each with a live swatch, plus the launcher icon colour in its own section. **Reset colours** restores the app's own defaults and leaves the icon alone.
 - **Follow system colours** — on Android 12+ the app can take its colours from your wallpaper instead. While that is on, the colour rows and reset are disabled, because the system theme would override anything picked.
-- **Picked colours stick** — a colour applies immediately, does not change with day or night, and if a pick would leave the text unreadable the other colour is matched to it, with a note saying so. The launcher icon offers 19 built-in colours; some launchers cache the icon until it is tapped.
+- **Picked colours stick** — a colour applies immediately, does not change with day or night, and if a pick would leave the text unreadable the other colour is matched to it, with a note saying so.
+- **Nineteen launcher colours, blue by default** — the icon ships as a white speech bubble with an *IN* knocked out of it, drawn over any of nineteen colours, `#2196F3` out of the box. Choosing a colour switches the matching launcher alias, so the icon changes and nothing else does; some launchers cache it until you tap it.
+- **Notifications follow the icon colour** — the accent Android paints around a notification is the chosen icon colour, and the status bar glyph is the same mark as the launcher. The status bar itself only draws a silhouette, so it stays white there on stock Android; some ROMs show the app icon instead and follow the colour.
+
+### Backup
+
+- **Nothing leaves the device by default.** Android's own backup is wired up but carries a single preferences file that only exists once you turn it on, so a fresh install has no data anywhere.
+- **Settings → Back up to Google account** writes your settings — sender groups, colours, OTP keywords, toggles — into that file and hands it to Android's backup; turning it off empties it again. A restored copy is applied at startup, then re-snapshotted so it stays current. Messages are deliberately excluded.
+- **Export and import stay separate** and unchanged: whole settings and messages as files you keep yourself, which is the only path that works without a Google account.
 
 ### Development
 
 - **Unit tests, including a message corpus** — `OtpDetectorTest` covers formats and the amount/date/masked-number rules; `OtpCorpusTest` replays 391 real-shaped messages (30 with a code, 361 without). Run them with `./gradlew testFossDebugUnitTest`.
 - **Corpus sources**, with thanks and their licences: [skyaara/indian-payment-sms-dataset](https://github.com/skyaara/indian-payment-sms-dataset) (CC BY 4.0), [abhirajsinha/omoi-sms-parser](https://github.com/abhirajsinha/omoi-sms-parser) (MIT) and [akhilnarang/bank-sms-parser](https://github.com/akhilnarang/bank-sms-parser) (MIT), plus messages received on the device. Provenance is recorded in `app/src/test/resources/otp-corpus.tsv`.
-- **CI** — the tests run on pull requests to `main` and gate the release build; a universal APK is released on every push to `main`. Work lands on `develop` first.
+- **CI** — the tests run on pull requests to `main` and gate the release build; a universal APK is released on every push to `main`. Work lands on `develop` first. The version in About comes from `VERSION_NAME` and `VERSION_CODE` in `gradle.properties`.
 
 ## Licence and credits
 
