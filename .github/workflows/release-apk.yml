@@ -63,7 +63,7 @@ jobs:
             exit 1
           fi
           version=$(grep -oP '(?<=^VERSION_NAME=).*' gradle.properties)
-          named="IN Messages $version.apk"
+          named="IN-Messages-$version.apk"
           cp "$apk" "$named"
           echo "path=$named" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
