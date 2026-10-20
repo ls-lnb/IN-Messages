@@ -69,3 +69,14 @@ In practice, publishing a build from this repository means:
 - **credit and no implied endorsement** — Fossify's name and icon are theirs, not part of the licence, so this fork ships under its own name and icon, and it is not affiliated with or endorsed by Fossify
 
 The bundled libraries keep their own licences, shown in the app under *About → Third-party licenses*. The OTP corpus sources are credited above.
+
+### Building it
+
+```bash
+git clone https://github.com/ls-lnb/messages-lnb
+cd messages-lnb
+./gradlew :app:assembleFossRelease      # APK in app/build/outputs/apk/foss/release/
+./gradlew :app:testFossDebugUnitTest    # unit tests and the message corpus
+```
+
+A release build is signed only if `keystore.properties` exists in the repository root (see `keystore.properties_sample`) or the `SIGNING_*` environment variables are set; otherwise Gradle logs a warning and the APK is unsigned. Pushing to `main` builds and publishes a signed APK through GitHub Actions.

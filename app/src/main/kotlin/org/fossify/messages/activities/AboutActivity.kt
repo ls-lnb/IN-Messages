@@ -61,6 +61,7 @@ class AboutActivity : SimpleActivity() {
         binding.aboutIssuesHolder.setOnClickListener { launchViewIntent(ISSUES_URL) }
         binding.aboutGithubHolder.setOnClickListener { launchViewIntent(REPOSITORY_URL) }
         binding.aboutLicensesHolder.setOnClickListener { launchLicenses() }
+        binding.aboutLicenseHolder.setOnClickListener { launchViewIntent(REPOSITORY_URL) }
     }
 
     override fun onResume() {

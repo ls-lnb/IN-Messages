@@ -76,4 +76,12 @@ jobs:
           name: "IN Messages ${{ steps.apk.outputs.version }} (#${{ github.run_number }})"
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
+          append_body: |
+            **Licence:** GNU GPL-3.0. This build is a fork of
+            [Fossify Messages](https://github.com/FossifyOrg/Messages), with thanks to
+            the Fossify team.
+
+            **Source:** the corresponding source for this build is
+            [build-${{ github.run_number }}](https://github.com/ls-lnb/messages-lnb/tree/build-${{ github.run_number }})
+            (commit `${{ github.sha }}`); the README explains how to build it.
           files: ${{ steps.apk.outputs.path }}
