@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <!-- Brand colour: matches the default launcher icon (Material blue 500). -->
+    <!-- Default launcher icon colour: Material blue 500, matching @mipmap/ic_launcher. -->
     <color name="default_app_icon_color">#FF2196F3</color>
-    <color name="default_primary_color">#FF2196F3</color>
 </resources>
