@@ -104,7 +104,7 @@
     <string name="unarchive">Unarchive</string>
     <string name="empty_archive">Delete all archived conversations</string>
     <string name="archived_conversations">Archive</string>
-    <string name="show_archived_conversations">Show archived conversations</string>
+    <string name="show_archived_conversations">Archives</string>
     <string name="archive">Archive</string>
     <string name="no_archived_conversations">No archived conversations have been found</string>
     <string name="archive_emptied_successfully">The archive has been emptied successfully</string>
@@ -188,6 +188,15 @@
     <string name="faq_3_text">Yes, you can schedule messages to be sent in the future by long pressing the Send button and picking the desired date and time.</string>
     <string name="faq_4_title">Why do my group message replies appear as individual texts to recipients?</string>
     <string name="faq_4_text">You need to enable \"Send group messages as MMS\" in the app settings. This will ensure that group messages are sent as proper MMS, allowing all participants to see each other\'s replies.</string>
+
+    <!-- About -->
+    <string name="about_version_format">Version %1$s (%2$d)</string>
+    <string name="frequently_asked_questions">Frequently Asked Questions</string>
+    <string name="about_known_issues">Known issues</string>
+    <string name="about_support_email">Support email</string>
+    <string name="about_support_email_address">inmessages@blinkingblue.com</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_licenses">Third-party licenses</string>
     <!--
         Haven't found some strings? There's more at
         https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res
