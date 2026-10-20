@@ -81,8 +81,8 @@ The bundled libraries keep their own licences, shown in the app under *About →
 ### Building it
 
 ```bash
-git clone https://github.com/ls-lnb/messages-lnb
-cd messages-lnb
+git clone https://github.com/ls-lnb/IN-Messages
+cd IN-Messages
 ./gradlew :app:assembleFossRelease      # APK in app/build/outputs/apk/foss/release/
 ./gradlew :app:testFossDebugUnitTest    # unit tests and the message corpus
 ```

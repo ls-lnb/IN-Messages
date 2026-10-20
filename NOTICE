@@ -22,7 +22,7 @@ application id. The tests, CI workflows and build files were adjusted to match.
 Source
 ------
 The complete corresponding source for every published build is this repository:
-<https://github.com/ls-lnb/messages-lnb>. Each release is built from a tagged commit
+<https://github.com/ls-lnb/IN-Messages>. Each release is built from a tagged commit
 on the main branch by the workflow in .github/workflows/release-apk.yml; the README
 explains how to build it.
 
