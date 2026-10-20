@@ -149,3 +149,10 @@ distinguishable from the background.
 **Watch on the next redraw:** the first delivery drew the IN as a second, filled path in
 the bubble's own ink, which renders invisible. The letters must stay subpaths of the
 bubble's path.
+
+Two foregrounds ship, named for the background they are drawn on:
+
+- `ic_launcher_foreground_on_dark.xml` — white mark, used on the thirteen backgrounds
+  from red through grey black, where white clears 2.5:1
+- `ic_launcher_foreground_on_light.xml` — `#1A1A1A` mark, used on amber, cyan, light
+  green, lime, orange and yellow, where white measures 2.30:1 or worse
