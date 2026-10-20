@@ -132,24 +132,20 @@ safer route.
 
 ---
 
-## As delivered, and what was changed to integrate it
+## As delivered
 
-The artwork arrived as four SVGs with the mark drawn as two paths: the bubble with its two
-lines as holes, and the IN as a separate **filled** path in the same ink colour. Because
-the IN sits inside the bubble and is filled with the bubble's own colour, it renders
-invisibly — the icon is a plain bubble. Checked by rasterising the files.
+The revised artwork is built the way this spec asks: one path with
+`fill-rule="evenodd"`, the bubble filled and its two lines plus the IN as holes, so the
+letters read the launcher background. IN measures 70 px cap height (spec asked 70–80),
+its bbox is x 185–302 by y 251–321, 20 px clear of the line above and 15 px from the
+bubble's bottom edge. Every point of the mark sits within the 156 px safe circle; the
+widest reach is the tail at 140 px.
 
-Integrated with three changes:
+The only change made on integration is the split into two foregrounds: white on the
+thirteen variants where it clears 2.5:1, and `#1A1A1A` on amber, cyan, light green,
+lime, orange and yellow, where the letters would otherwise sit on a bubble barely
+distinguishable from the background.
 
-1. **IN is a hole now.** The bubble, its lines and the IN are one path with
-   `fill-rule="evenodd"`, so the letters show the launcher's background colour instead of
-   the bubble's ink. In the monochrome layer the same path gives a cut-out IN.
-2. **IN scaled to 1.5×** — from a 48 px to a 72 px cap height, keeping its bottom-left
-   anchor. At 48 px the letters are unreadable at the 48 dp size launchers use; at 72 px
-   they read. Geometry after scaling: x 187–309, y 239–311, 10 px clear of the line above.
-3. **Six variants flip ink, thirteen keep white.** The delivered artwork assumed white
-   everywhere, which measures below 2.5:1 on six colours. Keeping white elsewhere
-   preserves the look; only amber, cyan, light green, lime, orange and yellow draw the
-   bubble in `#1A1A1A`.
-
-`featureGraphic.png` still shows the previous mark without the IN.
+**Watch on the next redraw:** the first delivery drew the IN as a second, filled path in
+the bubble's own ink, which renders invisible. The letters must stay subpaths of the
+bubble's path.
