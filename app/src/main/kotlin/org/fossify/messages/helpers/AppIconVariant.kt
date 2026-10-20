@@ -17,7 +17,7 @@ val appIconVariants = listOf(
     AppIconVariant("Purple", 0x7B1FA2FF.toInt()),
     AppIconVariant("Deep_purple", 0x512DA8FF.toInt()),
     AppIconVariant("Indigo", 0x303F9FFF.toInt()),
-    AppIconVariant("Blue", 0x1976D2FF.toInt()),
+    AppIconVariant("Blue", 0x2196F3FF.toInt()),
     AppIconVariant("Light_blue", 0x0288D1FF.toInt()),
     AppIconVariant("Cyan", 0x0097A7FF.toInt()),
     AppIconVariant("Teal", 0x00796BFF.toInt()),
