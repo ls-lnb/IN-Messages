@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 and above, cloud backup and phone-to-phone transfer alike. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="backup_opt_in.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="backup_opt_in.xml" />
+    </device-transfer>
+</data-extraction-rules>

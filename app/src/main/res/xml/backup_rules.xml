@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and below. Naming an include means nothing else is backed up, so the only
+     thing that reaches the account is the file the user opted into in Settings. -->
+<full-backup-content>
+    <include domain="sharedpref" path="backup_opt_in.xml" />
+</full-backup-content>

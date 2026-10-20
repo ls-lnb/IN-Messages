@@ -31,6 +31,7 @@ import org.fossify.commons.extensions.getIntValue
 import org.fossify.commons.extensions.getIntValueOr
 import org.fossify.commons.extensions.getLongValue
 import org.fossify.commons.extensions.getMyContactsCursor
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getStringValue
 import org.fossify.commons.extensions.hasPermission
 import org.fossify.commons.extensions.isNumberBlocked
@@ -1736,6 +1737,15 @@ fun Context.rescheduleAllScheduledMessages() {
 
 fun Context.getDefaultKeyboardHeight(): Int {
     return resources.getDimensionPixelSize(R.dimen.default_keyboard_height)
+}
+
+/**
+ * The accent Android paints around the notification. The launcher icon colour is what the user
+ * picked most recently, so it is the closest thing to an app identity colour here; the primary
+ * colour is the fallback until an icon colour has ever been stored.
+ */
+fun Context.getNotificationColor(): Int {
+    return config.appIconColor.takeIf { it != 0 } ?: getProperPrimaryColor()
 }
 
 fun Context.shouldUnarchive(): Boolean {

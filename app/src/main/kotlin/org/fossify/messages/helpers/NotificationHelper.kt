@@ -22,6 +22,7 @@ import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.messages.R
 import org.fossify.messages.activities.ThreadActivity
 import org.fossify.messages.extensions.config
+import org.fossify.messages.extensions.getNotificationColor
 import org.fossify.messages.extensions.findSenderGroup
 import org.fossify.messages.extensions.shortcutHelper
 import org.fossify.messages.messaging.isShortCodeWithLetters
@@ -168,7 +169,7 @@ class NotificationHelper(private val context: Context) {
                 }
             }
 
-            color = context.getProperPrimaryColor()
+            color = context.getNotificationColor()
             setSmallIcon(R.drawable.ic_messenger)
             setContentIntent(contentPendingIntent)
             if (otpCode != null) {
@@ -281,7 +282,7 @@ class NotificationHelper(private val context: Context) {
         val builder = NotificationCompat.Builder(context, notificationChannelId)
             .setContentTitle(context.getString(R.string.message_not_sent_short))
             .setContentText(summaryText)
-            .setColor(context.getProperPrimaryColor())
+            .setColor(context.getNotificationColor())
             .setSmallIcon(R.drawable.ic_messenger)
             .setLargeIcon(largeIcon)
             .setStyle(NotificationCompat.BigTextStyle().bigText(summaryText))

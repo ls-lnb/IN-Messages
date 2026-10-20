@@ -23,7 +23,7 @@ val appIconVariants = listOf(
     AppIconVariant("Green", 0xFF4CAF50.toInt()),
     AppIconVariant("Light_green", 0xFF8BC34A.toInt()),
     AppIconVariant("Lime", 0xFFCDDC39.toInt()),
-    AppIconVariant("Yellow", 0xFFEB3B.toInt()),
+    AppIconVariant("Yellow", 0xFFFFEB3B.toInt()),
     AppIconVariant("Amber", 0xFFFFC107.toInt()),
     AppIconVariant("Orange", 0xFFFF9800.toInt()),
     AppIconVariant("Deep_orange", 0xFFFF5722.toInt()),
@@ -32,5 +32,5 @@ val appIconVariants = listOf(
     AppIconVariant("Grey_black", 0xFF212121.toInt()),
 )
 
-/** The variant a fresh install uses, matching the enabled alias in the manifest. */
-val defaultAppIconVariant = appIconVariants.first { it.name == "Green" }
+/** The variant a fresh install uses, matching the icon @mipmap/ic_launcher draws. */
+val defaultAppIconVariant = appIconVariants.first { it.name == "Blue" }
