@@ -33,5 +33,5 @@ val appIconVariants = listOf(
     AppIconVariant("Grey_black", 0x212121FF.toInt()),
 )
 
-/** The variant a fresh install uses, matching the enabled alias in the manifest. */
-val defaultAppIconVariant = appIconVariants.first { it.name == "Green" }
+/** The variant a fresh install uses, matching the icon @mipmap/ic_launcher draws. */
+val defaultAppIconVariant = appIconVariants.first { it.name == "Blue" }

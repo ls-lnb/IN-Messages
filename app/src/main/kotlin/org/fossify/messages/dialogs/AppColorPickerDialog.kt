@@ -63,6 +63,16 @@ class AppColorPickerDialog(
     private fun selectColor(color: Int) {
         selectedColor = color
         binding.pickerHex.text = color.toHex()
+        // a long strip of colours gets compressed into slivers, so anything over COLORS_PER_ROW
+        // spills onto the second line instead of sharing one
+        if (!showShades && colors.size > COLORS_PER_ROW) {
+            val (firstRow, secondRow) = colors.chunked(COLORS_PER_ROW)
+            buildBands(binding.pickerLineOne, firstRow, color, ::selectColor)
+            binding.pickerLineTwo.beVisible()
+            buildBands(binding.pickerLineTwo, secondRow, color, ::selectColor)
+            return
+        }
+
         buildBands(binding.pickerLineOne, colors, color, ::selectColor)
         if (binding.pickerLineTwo.visibility == View.VISIBLE) {
             buildBands(binding.pickerLineTwo, colorShades(color, SHADE_COUNT), color, ::selectColor)
@@ -88,5 +98,6 @@ class AppColorPickerDialog(
 
     companion object {
         private const val SHADE_COUNT = 10
+        private const val COLORS_PER_ROW = 10
     }
 }
