@@ -83,6 +83,9 @@ import org.fossify.messages.models.SenderGroup
 import org.fossify.messages.messaging.isShortCodeWithLetters
 import java.util.UUID
 import org.xmlpull.v1.XmlPullParserException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.io.FileNotFoundException
 import kotlin.time.Duration.Companion.minutes
 
@@ -1744,6 +1747,15 @@ fun Context.getDefaultKeyboardHeight(): Int {
  * picked most recently, so it is the closest thing to an app identity colour here; the primary
  * colour is the fallback until an icon colour has ever been stored.
  */
+/**
+ * Timestamp used in export file names: fixed-width, order-preserving and free of the colons and
+ * spaces that some file pickers and cloud providers refuse. Locale-independent on purpose, so the
+ * same file name comes out whatever language the device is set to.
+ */
+fun Context.getExportTimestamp(): String {
+    return SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+}
+
 fun Context.getNotificationColor(): Int {
     return config.appIconColor.takeIf { it != 0 } ?: getProperPrimaryColor()
 }

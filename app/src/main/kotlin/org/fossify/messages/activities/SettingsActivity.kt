@@ -13,7 +13,6 @@ import org.fossify.commons.extensions.beGone
 import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getBlockedNumbers
-import org.fossify.commons.extensions.getCurrentFormattedDateTime
 import org.fossify.commons.extensions.getFontSizeText
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.showErrorToast
@@ -35,6 +34,7 @@ import org.fossify.messages.R
 import org.fossify.messages.databinding.ActivitySettingsBinding
 import org.fossify.messages.dialogs.ExportMessagesDialog
 import org.fossify.messages.extensions.config
+import org.fossify.messages.extensions.getExportTimestamp
 import org.fossify.messages.helpers.Config
 import org.fossify.messages.helpers.FILE_SIZE_100_KB
 import org.fossify.messages.helpers.FILE_SIZE_1_MB
@@ -191,7 +191,7 @@ class SettingsActivity : SimpleActivity() {
     private fun setupSettingsExport() {
         binding.settingsExportSettingsHolder.setOnClickListener {
             exportSettingsDocument.launch(
-                "messages_settings_${getCurrentFormattedDateTime()}.json"
+                "IN-Messages_Settings_${getExportTimestamp()}.json"
             )
         }
     }

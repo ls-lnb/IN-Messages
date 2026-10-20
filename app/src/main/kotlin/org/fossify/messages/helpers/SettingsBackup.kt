@@ -52,7 +52,7 @@ object SettingsBackup {
     fun importFromJson(context: Context, json: String) {
         val root = JSONObject(json)
         if (root.optString("format") != FORMAT) {
-            throw IllegalArgumentException("Not a Fossify Messages settings file")
+            throw IllegalArgumentException("Not an IN Messages settings file")
         }
         val version = root.optInt("version", 1)
         if (version > VERSION) {
