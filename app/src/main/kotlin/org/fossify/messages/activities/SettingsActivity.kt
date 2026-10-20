@@ -48,6 +48,7 @@ import org.fossify.messages.helpers.LOCK_SCREEN_SENDER
 import org.fossify.messages.helpers.LOCK_SCREEN_SENDER_MESSAGE
 import org.fossify.messages.helpers.MessagesImporter
 import org.fossify.messages.helpers.SenderGrouping
+import org.fossify.messages.helpers.GoogleBackup
 import org.fossify.messages.helpers.SettingsBackup
 import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.helpers.requestTelephonySyncProgress
@@ -139,6 +140,7 @@ class SettingsActivity : SimpleActivity() {
         setupMessagesImport()
         setupSettingsExport()
         setupSettingsImport()
+        setupGoogleBackup()
         updateTextColors(binding.settingsNestedScrollview)
 
         if (
@@ -157,6 +159,18 @@ class SettingsActivity : SimpleActivity() {
             binding.settingsMigratingLabel
         ).forEach {
             it.setTextColor(getProperPrimaryColor())
+        }
+    }
+
+    private fun setupGoogleBackup() = binding.apply {
+        settingsGoogleBackup.isChecked = GoogleBackup.isEnabled(this@SettingsActivity)
+        settingsGoogleBackupHolder.setOnClickListener {
+            settingsGoogleBackup.toggle()
+            if (settingsGoogleBackup.isChecked) {
+                GoogleBackup.enable(this@SettingsActivity)
+            } else {
+                GoogleBackup.disable(this@SettingsActivity)
+            }
         }
     }
 

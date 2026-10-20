@@ -18,6 +18,7 @@ import org.fossify.commons.helpers.PERMISSION_READ_CONTACTS
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.dismissOpenToolbarPopups
+import org.fossify.messages.helpers.GoogleBackup
 import org.fossify.messages.extensions.rescheduleAllScheduledMessages
 import org.fossify.messages.helpers.APP_SIDELOADING_STATUS_OK
 import org.fossify.messages.helpers.MessagingCache
@@ -30,6 +31,9 @@ class App : FossifyApp() {
 
     override fun onCreate() {
         super.onCreate()
+        // a snapshot restored by Android's backup carries the user's settings; it has to be
+        // applied before anything else reads them
+        GoogleBackup.restoreIfPending(this)
         installCrashReporter()
         installPopupDismissal()
         // This fork is not Fossify's signed build, so commons' canary check would report it as a

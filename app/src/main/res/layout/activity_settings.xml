@@ -488,6 +488,36 @@
                 layout="@layout/divider" />
 
             <RelativeLayout
+                android:id="@+id/settings_google_backup_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_google_backup"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/google_backup" />
+
+            </RelativeLayout>
+
+            <org.fossify.commons.views.MyTextView
+                android:id="@+id/settings_google_backup_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/activity_margin"
+                android:paddingTop="@dimen/small_margin"
+                android:paddingEnd="@dimen/activity_margin"
+                android:paddingBottom="@dimen/medium_margin"
+                android:text="@string/google_backup_hint"
+                android:textSize="@dimen/smaller_text_size" />
+
+            <include
+                android:id="@+id/settings_google_backup_divider"
+                layout="@layout/divider" />
+
+            <RelativeLayout
                 android:id="@+id/settings_export_settings_holder"
                 style="@style/SettingsHolderTextViewOneLinerStyle"
                 android:layout_width="match_parent"
