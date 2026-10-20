@@ -29,7 +29,7 @@ class AboutActivity : SimpleActivity() {
     private val binding by viewBinding(ActivityAboutBinding::inflate)
 
     private companion object {
-        const val REPOSITORY_URL = "https://github.com/ls-lnb/messages-lnb"
+        const val REPOSITORY_URL = "https://github.com/ls-lnb/IN-Messages"
         const val UPSTREAM_URL = "https://github.com/FossifyOrg/Messages"
         const val ISSUES_URL = "$REPOSITORY_URL/issues"
 
