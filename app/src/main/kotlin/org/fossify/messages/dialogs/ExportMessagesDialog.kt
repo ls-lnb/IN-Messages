@@ -7,7 +7,6 @@ import androidx.appcompat.app.AlertDialog
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
 import org.fossify.commons.extensions.getAlertDialogBuilder
-import org.fossify.commons.extensions.getCurrentFormattedDateTime
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.isAValidFilename
 import org.fossify.commons.extensions.setupDialogStuff
@@ -20,6 +19,7 @@ import org.fossify.messages.R
 import org.fossify.messages.activities.SimpleActivity
 import org.fossify.messages.databinding.DialogExportMessagesBinding
 import org.fossify.messages.extensions.config
+import org.fossify.messages.extensions.getExportTimestamp
 import org.fossify.messages.helpers.MessagesReader
 
 class ExportMessagesDialog(
@@ -34,7 +34,7 @@ class ExportMessagesDialog(
         exportSmsCheckbox.isChecked = config.exportSms
         exportMmsCheckbox.isChecked = config.exportMms
         exportMessagesFilename.setText(
-            "${activity.getString(R.string.messages)}_${activity.getCurrentFormattedDateTime()}"
+            "IN-Messages_${activity.getExportTimestamp()}"
         )
     }
 
