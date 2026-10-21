@@ -2,6 +2,7 @@ package org.fossify.messages.activities
 
 import android.os.Bundle
 import com.google.android.material.tabs.TabLayout
+import org.fossify.commons.dialogs.ConfirmationDialog
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.hideKeyboard
@@ -99,6 +100,11 @@ class SenderPickerActivity : SimpleActivity() {
         binding.senderPickerToolbar.inflateMenu(R.menu.menu_sender_picker)
         binding.senderPickerToolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
+                R.id.select_all_senders -> {
+                    selectAllVisible()
+                    true
+                }
+
                 R.id.confirm_group_senders -> {
                     confirmSelection()
                     true
@@ -139,21 +145,17 @@ class SenderPickerActivity : SimpleActivity() {
                 binding.senderPickerProgress.hide()
                 allSenders = ArrayList(senders)
                 groupTitles = buildGroupTitles()
-                setupAdapter()
+                adapter = SenderPickerAdapter(
+                    activity = this,
+                    selectedAddresses = selectedAddresses,
+                    groupTitles = groupTitles,
+                    onSelectionChanged = { updateSelectedCount() }
+                )
+                binding.senderPickerList.adapter = adapter
                 showFilteredSenders()
                 updateSelectedCount()
             }
         }
-    }
-
-    private fun setupAdapter() {
-        adapter = SenderPickerAdapter(
-            activity = this,
-            selectedAddresses = selectedAddresses,
-            groupTitles = groupTitles,
-            onSelectionChanged = { updateSelectedCount() }
-        )
-        binding.senderPickerList.adapter = adapter
     }
 
     private fun showFilteredSenders() {
@@ -196,6 +198,36 @@ class SenderPickerActivity : SimpleActivity() {
             binding.senderPickerPlaceholder.text = getString(R.string.no_short_code_senders)
         } else {
             binding.senderPickerPlaceholder.text = getString(org.fossify.commons.R.string.no_items_found)
+        }
+    }
+
+    /**
+     * Ticks every sender currently listed - the suggestions, or whatever the search narrowed it
+     * to. Bulk selection is convenient and easy to regret, so a long list asks first.
+     */
+    private fun selectAllVisible() {
+        val pending = adapter?.senders.orEmpty()
+            .filterNot { selectedAddresses.contains(it.address.uppercase()) }
+        if (pending.isEmpty()) {
+            toast(R.string.all_senders_already_selected)
+            return
+        }
+
+        val select: (List<ShortCodeSender>) -> Unit = { senders ->
+            senders.forEach { selectedAddresses.add(it.address.uppercase()) }
+            adapter?.notifyDataSetChanged()
+            updateSelectedCount()
+        }
+
+        if (pending.size <= BULK_SELECTION_WARNING) {
+            select(pending)
+        } else {
+            ConfirmationDialog(
+                activity = this,
+                message = getString(R.string.select_all_confirmation, pending.size),
+                positive = org.fossify.commons.R.string.yes,
+                negative = org.fossify.commons.R.string.no,
+            ) { select(pending) }
         }
     }
 
@@ -263,6 +295,9 @@ class SenderPickerActivity : SimpleActivity() {
     }
 
     private companion object {
+        /** Above this many senders, selecting them all asks for confirmation first. */
+        const val BULK_SELECTION_WARNING = 20
+
         const val TAB_SEARCH_SENDERS = 0
         const val TAB_GROUPED_SENDERS = 1
     }
