@@ -66,7 +66,7 @@ class SenderIndex(addresses: Collection<String>) {
         val fuzzyAllowed = normalizedQuery.length >= MIN_FUZZY_QUERY_LENGTH
         val scored = candidates
             .asSequence()
-            .mapNotNull { score(normalizedQuery, it, fuzzyAllowed) }
+            .mapNotNull { address -> score(query, normalizedQuery, address, fuzzyAllowed) }
             .sortedWith(
                 compareByDescending<SenderMatch> { it.score }
                     .thenBy { it.address.uppercase() }
@@ -95,34 +95,41 @@ class SenderIndex(addresses: Collection<String>) {
 
         val fuzzyAllowed = normalizedQuery.length >= MIN_FUZZY_QUERY_LENGTH
         return candidates
-            .mapNotNull { score(normalizedQuery, it, fuzzyAllowed) }
+            .mapNotNull { address -> score(query, normalizedQuery, address, fuzzyAllowed) }
             .sortedWith(
                 compareByDescending<SenderMatch> { it.score }
                     .thenBy { it.address.uppercase() }
             )
     }
 
-    private fun score(query: String, address: String, fuzzyAllowed: Boolean): SenderMatch? {
+    private fun score(
+        query: String,
+        normalizedQuery: String,
+        address: String,
+        fuzzyAllowed: Boolean,
+    ): SenderMatch? {
         val candidate = normalize(address)
         return when {
             candidate.isEmpty() -> null
-            candidate == query -> SenderMatch(address, EXACT_SCORE, address, direct = true)
-            else -> scoreAgainst(query, address, candidate, fuzzyAllowed)
+            candidate == normalizedQuery -> SenderMatch(address, EXACT_SCORE, address, direct = true)
+            else -> scoreAgainst(query, normalizedQuery, address, candidate, fuzzyAllowed)
         }
     }
 
     private fun scoreAgainst(
         query: String,
+        normalizedQuery: String,
         address: String,
         candidate: String,
         fuzzyAllowed: Boolean,
     ): SenderMatch? {
-        val direct = candidate.contains(query) || query.contains(candidate)
-        val evidence = longestCommonSubstring(query, candidate)
+        val direct = candidate.contains(normalizedQuery) || normalizedQuery.contains(candidate)
+        // segments come from the original addresses, so a run can never jump a separator
+        val evidence = longestCommonSubstring(query, address)
         return if (fuzzyAllowed && evidence.length >= MIN_EVIDENCE_LENGTH) {
-            inferredMatch(query, address, candidate, evidence, direct)
+            inferredMatch(query, address, evidence, direct)
         } else {
-            directMatch(address, query, direct)
+            directMatch(address, normalizedQuery, direct)
         }
     }
 
@@ -133,15 +140,14 @@ class SenderIndex(addresses: Collection<String>) {
     private fun inferredMatch(
         query: String,
         address: String,
-        candidate: String,
         evidence: String,
         direct: Boolean,
     ): SenderMatch {
         val evidenceRarity = rarity(evidence)
         val evidenceScore = evidenceRarity * min(evidence.length / FULL_EVIDENCE_LENGTH, 1.0)
         val inferred = WEIGHT_EVIDENCE * evidenceScore +
-            WEIGHT_NGRAMS * weightedOverlap(query, candidate) +
-            WEIGHT_EDIT * editSimilarity(query, candidate)
+            WEIGHT_NGRAMS * weightedOverlap(query, address) +
+            WEIGHT_EDIT * editSimilarity(normalize(query), normalize(address))
 
         val total = if (direct) max(inferred, DIRECT_SCORE) else inferred
         val relevant = direct || (total >= MIN_SCORE && evidenceRarity >= MIN_EVIDENCE_RARITY)
@@ -225,16 +231,33 @@ class SenderIndex(addresses: Collection<String>) {
             return value.trim().uppercase().replace(SEPARATORS, "")
         }
 
+        /**
+         * The parts of an address between its separators, upper case. `VM-CAMS` yields `VM` and
+         * `CAMS`; a hyphen is a boundary, not something to glue over.
+         */
+        fun segments(value: String): List<String> {
+            return value.trim().uppercase().split(SEPARATORS).filter { it.isNotEmpty() }
+        }
+
+        /**
+         * Trigrams within each segment. A gram like `VMC` would otherwise be read out of
+         * `VM-CAMS`, i.e. made of the routing prefix and the first letter of the brand, which
+         * says nothing about the sender.
+         */
         fun grams(value: String): Set<String> {
-            if (value.length < GRAM_SIZE) {
-                return emptySet()
+            return segments(value)
+                .flatMap { segment -> segmentGrams(segment) }
+                .toSet()
+        }
+
+        private fun segmentGrams(segment: String): List<String> {
+            if (segment.length < GRAM_SIZE) {
+                return emptyList()
             }
 
-            val result = HashSet<String>(value.length)
-            for (index in 0..value.length - GRAM_SIZE) {
-                result.add(value.substring(index, index + GRAM_SIZE))
+            return (0..segment.length - GRAM_SIZE).map { index ->
+                segment.substring(index, index + GRAM_SIZE)
             }
-            return result
         }
 
         /**
@@ -255,6 +278,14 @@ class SenderIndex(addresses: Collection<String>) {
 
         /** Longest run of adjacent characters the two strings share, empty when there is none. */
         fun longestCommonSubstring(first: String, second: String): String {
+            return segments(first)
+                .flatMap { left -> segments(second).map { right -> commonRun(left, right) } }
+                .maxByOrNull { it.length }
+                .orEmpty()
+        }
+
+        /** Longest run of adjacent characters shared by two single segments. */
+        private fun commonRun(first: String, second: String): String {
             if (first.isEmpty() || second.isEmpty()) {
                 return ""
             }

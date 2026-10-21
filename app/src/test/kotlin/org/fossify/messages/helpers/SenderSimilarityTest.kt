@@ -132,10 +132,35 @@ class SenderSimilarityTest {
     }
 
     @Test
-    fun `ignores case, whitespace and separators`() {
+    fun `ignores case, whitespace and which separator is used`() {
         val baseline = related("TX-SBIBNK").map { it.address }
-        listOf("tx-sbibnk", "TX SBIBNK", "TXSBIBNK", "  tx_sbibnk  ").forEach { variant ->
+        listOf("tx-sbibnk", "TX SBIBNK", "  tx_sbibnk  ").forEach { variant ->
             assertEquals("variant `$variant` should rank the same", baseline, related(variant).map { it.address })
+        }
+    }
+
+    @Test
+    fun `separators are boundaries, so no gram straddles one`() {
+        // the reason VM-CAMS used to match on 'VMC': that gram was read across the hyphen
+        assertEquals(setOf("CAM", "AMS"), SenderIndex.grams("VM-CAMS"))
+        assertEquals(listOf("VM", "CAMS"), SenderIndex.segments("VM-CAMS"))
+        assertFalse("VMC" in SenderIndex.grams("VM-CAMS"))
+
+        val cams = SenderIndex(listOf("VM-CAMS", "AD-VMCPAY", "AX-CAMSIN", "TM-CASHWITHD"))
+        val results = cams.rank("VM-CAMS", listOf("VM-CAMS", "AD-VMCPAY", "AX-CAMSIN", "TM-CASHWITHD"))
+        // AD-VMCPAY shares VMC, but only by way of its own letters - it must not be matched here
+        assertFalse(
+            "AD-VMCPAY must not be related through a straddling gram",
+            results.any { it.address == "AD-VMCPAY" }
+        )
+        assertTrue("AX-CAMSIN shares CAMS", results.any { it.address == "AX-CAMSIN" })
+    }
+
+    @Test
+    fun `a query typed without separators still finds the family`() {
+        val addresses = related("TXSBIBNK").map { it.address }
+        listOf("AD-CBSSBI", "VD-SBIPG", "MX-ATMSBI", "VM-SBICGV-S").forEach {
+            assertTrue("$it should still be found, got $addresses", it in addresses)
         }
     }
 
