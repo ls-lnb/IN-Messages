@@ -98,7 +98,7 @@ class SenderIndex(addresses: Collection<String>) {
         val candidate = normalize(address)
         return when {
             candidate.isEmpty() -> null
-            candidate == normalizedQuery -> SenderMatch(address, EXACT_SCORE, address, direct = true)
+            candidate == normalizedQuery -> SenderMatch(address, EXACT_SCORE, "", direct = true)
             else -> scoreAgainst(query, normalizedQuery, address, candidate, fuzzyAllowed)
         }
     }
@@ -111,7 +111,7 @@ class SenderIndex(addresses: Collection<String>) {
         fuzzyAllowed: Boolean,
     ): SenderMatch? {
         val direct = candidate.contains(normalizedQuery) || normalizedQuery.contains(candidate)
-        val byRun = runMatch(query, normalizedQuery, address, direct, fuzzyAllowed)
+        val byRun = runMatch(query, address, direct, fuzzyAllowed)
         val byTypo = typoMatch(query, address)?.copy(address = address)
         return listOfNotNull(byRun, byTypo).maxByOrNull { it.score }
     }
@@ -119,7 +119,6 @@ class SenderIndex(addresses: Collection<String>) {
     /** Relatedness through a shared piece of the id. */
     private fun runMatch(
         query: String,
-        normalizedQuery: String,
         address: String,
         direct: Boolean,
         fuzzyAllowed: Boolean,
@@ -129,7 +128,7 @@ class SenderIndex(addresses: Collection<String>) {
         return if (fuzzyAllowed && evidence.length >= MIN_EVIDENCE_LENGTH) {
             inferredMatch(query, address, evidence, direct)
         } else {
-            directMatch(address, normalizedQuery, direct)
+            directMatch(address, query, direct)
         }
     }
 

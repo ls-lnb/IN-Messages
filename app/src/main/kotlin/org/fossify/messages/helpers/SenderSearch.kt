@@ -33,7 +33,7 @@ class SenderSearch(
     /** The shared run behind each inferred match, so a row can explain why it is listed. */
     private fun evidenceOf(ranked: List<SenderMatch>): Map<String, SenderMatch> {
         return ranked
-            .filter { !it.direct && it.relevant && it.evidence.isNotEmpty() }
+            .filter { it.relevant && it.evidence.isNotEmpty() }
             .associateBy { it.address.uppercase() }
     }
 

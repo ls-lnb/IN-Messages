@@ -142,6 +142,31 @@ class SenderSimilarityTest {
     }
 
 
+
+    @Test
+    fun `a containment match says what it matched, an exact one stays quiet`() {
+        val corpus = listOf("AD-HDFCBK", "JM-HDFCBK-S", "VA-HDFCBK", "AX-ICICIB")
+        val index = SenderIndex(corpus)
+
+        // the sender you opened the picker from: nothing to explain
+        val seedRun = index.order("AD-HDFCBK", corpus)
+        assertEquals(
+            "an exact match needs no explanation",
+            "",
+            seedRun.first { it.address == "AD-HDFCBK" }.evidence
+        )
+        assertTrue(
+            "its relatives still say what they share",
+            seedRun.first { it.address == "JM-HDFCBK-S" }.evidence.isNotEmpty()
+        )
+
+        // typed text that appears verbatim in an id
+        val typed = index.order("HDFCBK", corpus)
+        val contained = typed.first { it.address == "JM-HDFCBK-S" }
+        assertTrue("a containment match should explain itself", contained.evidence.isNotEmpty())
+        assertTrue("and it is a direct match", contained.direct)
+    }
+
     @Test
     fun `finds a sender whose id is one character short`() {
         val brands = listOf(

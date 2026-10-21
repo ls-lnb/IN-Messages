@@ -134,6 +134,9 @@ class SenderPickerActivity : SimpleActivity() {
                         snippet = snippets[address.uppercase()].orEmpty()
                     )
                 }
+                // the provider can report the same sender in different casing, which would
+                // otherwise show up as two identical rows
+                .distinctBy { it.address.uppercase() }
                 .sortedWith(
                     compareBy<ShortCodeSender> {
                         it.address.similarShortCodeKey() ?: it.address.uppercase()
