@@ -1,6 +1,10 @@
 package org.fossify.messages.adapters
 
 import android.content.res.ColorStateList
+import android.graphics.Typeface
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.StyleSpan
 import android.util.TypedValue
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -27,6 +31,28 @@ class SenderPickerAdapter(
             field = value
             notifyDataSetChanged()
         }
+
+    private fun relatedText(evidence: String, preview: String): CharSequence {
+        val reason = activity.getString(R.string.related_sender_match, evidence)
+        if (preview.isBlank()) {
+            return italic(reason)
+        }
+
+        val text = SpannableString("$reason\n$preview")
+        text.setSpan(
+            StyleSpan(Typeface.ITALIC),
+            0,
+            reason.length,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        return text
+    }
+
+    private fun italic(value: String): CharSequence {
+        val text = SpannableString(value)
+        text.setSpan(StyleSpan(Typeface.ITALIC), 0, value.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return text
+    }
 
     private companion object {
         const val ADDRESS_SCALE = 1.1f
@@ -62,10 +88,9 @@ class SenderPickerAdapter(
                 text = if (evidence.isNullOrEmpty()) {
                     base
                 } else {
-                    listOf(
-                        activity.getString(R.string.related_sender_match, evidence),
-                        base,
-                    ).filter { it.isNotBlank() }.joinToString(" · ")
+                    // the reason sits on its own line and in italics, so it cannot be mistaken
+                    // for part of the message preview underneath it
+                    relatedText(evidence, base)
                 }
                 setTextColor(textColor)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * DETAILS_SCALE)
