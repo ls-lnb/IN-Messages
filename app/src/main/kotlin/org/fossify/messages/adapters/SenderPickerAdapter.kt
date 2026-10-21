@@ -16,6 +16,7 @@ class SenderPickerAdapter(
     private val activity: SimpleActivity,
     private val selectedAddresses: HashSet<String>,
     var groupTitles: Map<String, String>,
+    var matches: Map<String, String> = emptyMap(),
     private val onSelectionChanged: () -> Unit,
 ) : RecyclerView.Adapter<SenderPickerAdapter.ViewHolder>() {
     private val textColor = activity.getProperTextColor()
@@ -26,6 +27,11 @@ class SenderPickerAdapter(
             field = value
             notifyDataSetChanged()
         }
+
+    private companion object {
+        const val ADDRESS_SCALE = 1.1f
+        const val DETAILS_SCALE = 0.85f
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemSenderPickerBinding.inflate(activity.layoutInflater, parent, false)
@@ -46,14 +52,22 @@ class SenderPickerAdapter(
             binding.senderPickerAddress.apply {
                 text = sender.address
                 setTextColor(textColor)
-                setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * 1.1f)
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * ADDRESS_SCALE)
             }
+            val evidence = matches[addressKey]
             binding.senderPickerDetails.apply {
-                text = groupTitle?.let {
+                val base = groupTitle?.let {
                     activity.getString(R.string.in_sender_group, it)
                 } ?: sender.snippet
+                text = if (evidence.isNullOrEmpty()) {
+                    base
+                } else {
+                    listOf(base, activity.getString(R.string.related_sender_match, evidence))
+                        .filter { it.isNotBlank() }
+                        .joinToString(" · ")
+                }
                 setTextColor(textColor)
-                setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * 0.85f)
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * DETAILS_SCALE)
             }
             binding.senderPickerCheck.apply {
                 isChecked = selectedAddresses.contains(addressKey)

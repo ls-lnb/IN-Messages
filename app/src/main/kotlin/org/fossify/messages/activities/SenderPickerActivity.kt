@@ -22,6 +22,8 @@ import org.fossify.messages.extensions.similarShortCodeKey
 import org.fossify.messages.helpers.PRESELECTED_SENDER_ADDRESSES
 import org.fossify.messages.helpers.SIMILAR_SEED_ADDRESS
 import org.fossify.messages.helpers.refreshConversations
+import org.fossify.messages.helpers.SenderIndex
+import org.fossify.messages.helpers.SenderSearch
 import org.fossify.messages.models.ShortCodeSender
 
 class SenderPickerActivity : SimpleActivity() {
@@ -34,7 +36,8 @@ class SenderPickerActivity : SimpleActivity() {
     private var groupTitles = emptyMap<String, String>()
     private var adapter: SenderPickerAdapter? = null
     private var currentQuery = ""
-    private var similarKey: String? = null
+    private var seedAddress: String? = null
+    private var senderIndex: SenderIndex? = null
     private var currentTab = TAB_SEARCH_SENDERS
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +56,7 @@ class SenderPickerActivity : SimpleActivity() {
                 selectedAddresses.addAll(it)
                 memberAddresses.addAll(it)
             }
-        similarKey = intent.getStringExtra(SIMILAR_SEED_ADDRESS)?.similarShortCodeKey()
+        seedAddress = intent.getStringExtra(SIMILAR_SEED_ADDRESS)
 
         // show the group name in the header when editing an existing group
         memberAddresses.firstNotNullOfOrNull { config.findSenderGroupByAddress(it) }?.let { group ->
@@ -130,6 +133,8 @@ class SenderPickerActivity : SimpleActivity() {
                     }.thenBy { it.address.uppercase() }
                 )
 
+            senderIndex = SenderIndex(senders.map { it.address })
+
             runOnUiThread {
                 binding.senderPickerProgress.hide()
                 allSenders = ArrayList(senders)
@@ -164,25 +169,25 @@ class SenderPickerActivity : SimpleActivity() {
                         .thenBy { it.address.uppercase() }
                 )
         } else {
-            allSenders
-                .filterNot { memberAddresses.contains(it.address.uppercase()) }
-                // senders similar to the one the picker was opened from float to the top
-                .sortedBy { if (similarKey != null && it.address.similarShortCodeKey() == similarKey) 0 else 1 }
+            allSenders.filterNot { memberAddresses.contains(it.address.uppercase()) }
         }
 
-        val query = currentQuery.trim().uppercase()
-        val filtered = ArrayList(
-            source.filter {
-                query.isEmpty() ||
-                    it.address.uppercase().contains(query) ||
-                    it.snippet.uppercase().contains(query) ||
-                    groupTitles[it.address.uppercase()].orEmpty().uppercase().contains(query)
-            }
-        )
+        val query = currentQuery.trim()
+        val filtered: List<ShortCodeSender>
+        val matches: Map<String, String>
+        if (query.isEmpty()) {
+            filtered = SenderSearch(senderIndex, seedAddress).order(source)
+            matches = emptyMap()
+        } else {
+            val search = SenderSearch(senderIndex, seedAddress).search(source, query, groupTitles)
+            filtered = search.first
+            matches = search.second
+        }
 
         // the grouped tab shows message snippets instead of repeating the group name
         adapter?.groupTitles = if (inGroupTab) emptyMap() else groupTitles
-        adapter?.senders = filtered
+        adapter?.matches = matches
+        adapter?.senders = ArrayList(filtered)
         binding.senderPickerPlaceholder.beVisibleIf(filtered.isEmpty())
         binding.senderPickerList.beVisibleIf(filtered.isNotEmpty())
         if (allSenders.isEmpty()) {
@@ -213,7 +218,9 @@ class SenderPickerActivity : SimpleActivity() {
         if (anchorGroup != null) {
             applySelection(title = anchorGroup.title, preferredGroupId = anchorGroup.id)
         } else {
-            val prefilledName = similarKey ?: selectedAddresses.first()
+            val prefilledName = SenderIndex.sharedRun(selectedAddresses)
+                ?: seedAddress?.similarShortCodeKey()
+                ?: selectedAddresses.first()
             GroupSendersDialog(this, prefilledName) { name ->
                 applySelection(title = name, preferredGroupId = null)
             }

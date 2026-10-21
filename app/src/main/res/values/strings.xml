@@ -198,6 +198,7 @@
     <string name="about_support_email_address">inmessages@blinkingblue.com</string>
     <string name="about_github">GitHub</string>
     <string name="about_licenses">Third-party licenses</string>
+    <string name="related_sender_match">matches %s</string>
     <string name="google_backup">Back up to Google account</string>
     <string name="google_backup_hint">Off by default, and only settings travel: sender groups, colours and OTP keywords are copied into Android\'s own backup so a reinstall on the same account can restore them. Messages are not included. Use Export for those.</string>
     <string name="settings_restored_from_backup">Settings restored from the Android backup</string>
