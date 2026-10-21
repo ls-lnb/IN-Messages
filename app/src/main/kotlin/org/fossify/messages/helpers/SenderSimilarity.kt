@@ -1,6 +1,5 @@
 package org.fossify.messages.helpers
 
-import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 
@@ -12,11 +11,19 @@ import kotlin.math.min
 data class SenderMatch(
     val address: String,
     val score: Double,
+    /** For [MatchReason.SHARED_RUN] the run itself; for typos, a description of the difference. */
     val evidence: String,
     val direct: Boolean,
     /** False for matches that only made the list through the small-corpus fallback. */
     val relevant: Boolean = true,
+    val reason: MatchReason = MatchReason.SHARED_RUN,
 )
+
+/**
+ * Why a sender was considered related. Kept apart on purpose: a nearly identical spelling is a
+ * different claim from sharing a distinctive piece of an id, and the two are scored separately.
+ */
+enum class MatchReason { SHARED_RUN, TYPO }
 
 /**
  * Finds the sender ids that plausibly belong to the same organisation as a given one.
@@ -34,27 +41,7 @@ data class SenderMatch(
  * verbatim containment match outranks anything inferred.
  */
 class SenderIndex(addresses: Collection<String>) {
-    private val documentFrequency: Map<String, Int>
-    private val documentCount: Int
-    private val maxIdf: Double
-
-    init {
-        val frequencies = HashMap<String, Int>()
-        val documents = addresses
-            .map { normalize(it) }
-            .filter { it.length >= GRAM_SIZE }
-            .toSet()
-
-        documents.forEach { document ->
-            grams(document).forEach { gram ->
-                frequencies[gram] = (frequencies[gram] ?: 0) + 1
-            }
-        }
-
-        documentFrequency = frequencies
-        documentCount = documents.size
-        maxIdf = ln(documentCount + 1.0)
-    }
+    private val weights = GramWeights(addresses)
 
     /** Senders related to [query], best first. Senders of equal score fall back to address order. */
     fun rank(query: String, candidates: List<String>, limit: Int = DEFAULT_LIMIT): List<SenderMatch> {
@@ -124,6 +111,19 @@ class SenderIndex(addresses: Collection<String>) {
         fuzzyAllowed: Boolean,
     ): SenderMatch? {
         val direct = candidate.contains(normalizedQuery) || normalizedQuery.contains(candidate)
+        val byRun = runMatch(query, normalizedQuery, address, direct, fuzzyAllowed)
+        val byTypo = typoMatch(query, address)?.copy(address = address)
+        return listOfNotNull(byRun, byTypo).maxByOrNull { it.score }
+    }
+
+    /** Relatedness through a shared piece of the id. */
+    private fun runMatch(
+        query: String,
+        normalizedQuery: String,
+        address: String,
+        direct: Boolean,
+        fuzzyAllowed: Boolean,
+    ): SenderMatch? {
         // segments come from the original addresses, so a run can never jump a separator
         val evidence = longestCommonSubstring(query, address)
         return if (fuzzyAllowed && evidence.length >= MIN_EVIDENCE_LENGTH) {
@@ -131,6 +131,42 @@ class SenderIndex(addresses: Collection<String>) {
         } else {
             directMatch(address, normalizedQuery, direct)
         }
+    }
+
+    /**
+     * Relatedness through spelling alone. Independent of the run scoring: two ids can be one
+     * keystroke apart without being the same sender, and can share nothing while being the same.
+     */
+    private fun typoMatch(query: String, address: String): SenderMatch? {
+        // compared segment by segment: a two-letter routing prefix is not a typo in the brand
+        return segments(query)
+            .flatMap { left -> segments(address).map { right -> typoSegmentMatch(left, right) } }
+            .filterNotNull()
+            .maxByOrNull { it.score }
+    }
+
+    private fun typoSegmentMatch(query: String, candidate: String): SenderMatch? {
+        val length = max(query.length, candidate.length)
+        if (TypoMatching.allowedTypos(length) == 0) {
+            return null
+        }
+
+        val distance = TypoMatching.distance(query, candidate)
+        val similarity = TypoMatching.similarity(query, candidate)
+        val description = TypoMatching.description(query, candidate)
+        val inTolerance = distance in 1..TypoMatching.allowedTypos(length) &&
+            similarity >= MIN_TYPO_SIMILARITY
+        if (!inTolerance || description == null) {
+            return null
+        }
+
+        return SenderMatch(
+            address = candidate,
+            score = TYPO_SCORE_BASE + TYPO_SCORE_RANGE * similarity,
+            evidence = description,
+            direct = false,
+            reason = MatchReason.TYPO,
+        )
     }
 
     private fun directMatch(address: String, query: String, direct: Boolean): SenderMatch? {
@@ -143,44 +179,15 @@ class SenderIndex(addresses: Collection<String>) {
         evidence: String,
         direct: Boolean,
     ): SenderMatch {
-        val evidenceRarity = rarity(evidence)
+        val evidenceRarity = weights.rarity(evidence)
         val evidenceScore = evidenceRarity * min(evidence.length / FULL_EVIDENCE_LENGTH, 1.0)
         val inferred = WEIGHT_EVIDENCE * evidenceScore +
-            WEIGHT_NGRAMS * weightedOverlap(query, address) +
-            WEIGHT_EDIT * editSimilarity(normalize(query), normalize(address))
+            WEIGHT_NGRAMS * weights.overlap(query, address) +
+            WEIGHT_EDIT * TypoMatching.similarity(normalize(query), normalize(address))
 
         val total = if (direct) max(inferred, DIRECT_SCORE) else inferred
         val relevant = direct || (total >= MIN_SCORE && evidenceRarity >= MIN_EVIDENCE_RARITY)
         return SenderMatch(address, total, evidence, direct, relevant)
-    }
-
-    /** Share of the query's trigrams the candidate also has, each weighted by how rare it is. */
-    private fun weightedOverlap(query: String, candidate: String): Double {
-        val queryGrams = grams(query)
-        if (queryGrams.isEmpty()) {
-            return 0.0
-        }
-
-        val candidateGrams = grams(candidate)
-        val shared = queryGrams.sumOf { gram -> if (gram in candidateGrams) idf(gram) else 0.0 }
-        val total = queryGrams.sumOf { gram -> idf(gram) }
-        return if (total == 0.0) 0.0 else shared / total
-    }
-
-    /** How distinctive [evidence] is: 1 for a run nothing else shares, 0 for a ubiquitous one. */
-    private fun rarity(evidence: String): Double {
-        val evidenceGrams = grams(evidence)
-        if (evidenceGrams.isEmpty() || maxIdf == 0.0) {
-            return 0.0
-        }
-
-        val rarest = evidenceGrams.minOf { gram -> idf(gram) }
-        return (rarest / maxIdf).coerceIn(0.0, 1.0)
-    }
-
-    private fun idf(gram: String): Double {
-        val frequency = documentFrequency[gram] ?: 0
-        return ln((documentCount + 1.0) / (frequency + 1.0))
     }
 
     companion object {
@@ -216,6 +223,19 @@ class SenderIndex(addresses: Collection<String>) {
          * leave nothing at all. Rather than show an empty list, the best few candidates are
          * returned anyway; they still sit below anything that cleared the gates.
          */
+        /**
+         * How many characters may differ before a sender stops being "probably the same one".
+         * A single change in a short id is a different id far more often than it is a typo, so
+         * nothing shorter than [TYPO_MIN_LENGTH] takes part at all.
+         */
+
+        /** Typo scores sit between an inferred relation and a verbatim one. */
+        private const val TYPO_SCORE_BASE = 0.45
+        private const val TYPO_SCORE_RANGE = 0.40
+
+        /** A typo has to stay this close proportionally, whatever the length allows. */
+        private const val MIN_TYPO_SIMILARITY = 0.70
+
         private const val FALLBACK_RESULTS = 3
 
         /** Fewer confident matches than this and the list is padded from the rest. */
@@ -328,26 +348,5 @@ class SenderIndex(addresses: Collection<String>) {
             return if (bestLength == 0) "" else first.substring(bestEnd - bestLength, bestEnd)
         }
 
-        /** 1 for identical strings, 0 for nothing in common; catches genuine typos. */
-        fun editSimilarity(first: String, second: String): Double {
-            if (first.isEmpty() && second.isEmpty()) {
-                return 1.0
-            }
-
-            var previous = IntArray(second.length + 1) { it }
-            for (i in 1..first.length) {
-                val current = IntArray(second.length + 1)
-                current[0] = i
-                for (j in 1..second.length) {
-                    val substitution = previous[j - 1] + if (first[i - 1] == second[j - 1]) 0 else 1
-                    current[j] = minOf(current[j - 1] + 1, previous[j] + 1, substitution)
-                }
-                previous = current
-            }
-
-            val distance = previous[second.length]
-            val longest = max(first.length, second.length)
-            return 1.0 - distance.toDouble() / longest
-        }
     }
 }

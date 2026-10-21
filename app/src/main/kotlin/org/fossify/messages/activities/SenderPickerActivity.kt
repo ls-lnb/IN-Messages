@@ -24,6 +24,7 @@ import org.fossify.messages.helpers.PRESELECTED_SENDER_ADDRESSES
 import org.fossify.messages.helpers.SIMILAR_SEED_ADDRESS
 import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.helpers.SenderIndex
+import org.fossify.messages.helpers.SenderMatch
 import org.fossify.messages.helpers.SenderSearch
 import org.fossify.messages.models.ShortCodeSender
 
@@ -176,7 +177,7 @@ class SenderPickerActivity : SimpleActivity() {
 
         val query = currentQuery.trim()
         val filtered: List<ShortCodeSender>
-        val matches: Map<String, String>
+        val matches: Map<String, SenderMatch>
         if (query.isEmpty()) {
             val ordered = SenderSearch(senderIndex, seedAddress).order(source)
             filtered = ordered.first

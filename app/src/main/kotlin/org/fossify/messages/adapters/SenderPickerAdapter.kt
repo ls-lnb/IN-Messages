@@ -14,6 +14,8 @@ import org.fossify.commons.extensions.getTextSize
 import org.fossify.messages.R
 import org.fossify.messages.activities.SimpleActivity
 import org.fossify.messages.databinding.ItemSenderPickerBinding
+import org.fossify.messages.helpers.MatchReason
+import org.fossify.messages.helpers.SenderMatch
 import org.fossify.messages.databinding.ItemSenderPickerFooterBinding
 import org.fossify.messages.models.ShortCodeSender
 
@@ -21,7 +23,7 @@ class SenderPickerAdapter(
     private val activity: SimpleActivity,
     private val selectedAddresses: HashSet<String>,
     var groupTitles: Map<String, String>,
-    var matches: Map<String, String> = emptyMap(),
+    var matches: Map<String, SenderMatch> = emptyMap(),
     private val onSelectionChanged: () -> Unit,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val textColor = activity.getProperTextColor()
@@ -48,8 +50,15 @@ class SenderPickerAdapter(
         }
     }
 
-    private fun relatedText(evidence: String, preview: String): CharSequence {
-        val reason = activity.getString(R.string.related_sender_match, evidence)
+    private fun reasonText(match: SenderMatch): String {
+        return if (match.reason == MatchReason.TYPO) {
+            match.evidence
+        } else {
+            activity.getString(R.string.related_sender_match, match.evidence)
+        }
+    }
+
+    private fun relatedText(reason: String, preview: String): CharSequence {
         if (preview.isBlank()) {
             return italic(reason)
         }
@@ -108,17 +117,17 @@ class SenderPickerAdapter(
                 setTextColor(textColor)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * ADDRESS_SCALE)
             }
-            val evidence = matches[addressKey]
+            val match = matches[addressKey]
             binding.senderPickerDetails.apply {
                 val base = groupTitle?.let {
                     activity.getString(R.string.in_sender_group, it)
                 } ?: sender.snippet
-                text = if (evidence.isNullOrEmpty()) {
+                text = if (match == null) {
                     base
                 } else {
                     // the reason sits on its own line and in italics, so it cannot be mistaken
                     // for part of the message preview underneath it
-                    relatedText(evidence, base)
+                    relatedText(reasonText(match), base)
                 }
                 setTextColor(textColor)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * DETAILS_SCALE)

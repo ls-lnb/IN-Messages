@@ -2,6 +2,8 @@ package org.fossify.messages.helpers
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -137,6 +139,70 @@ class SenderSimilarityTest {
         listOf("tx-sbibnk", "TX SBIBNK", "  tx_sbibnk  ").forEach { variant ->
             assertEquals("variant `$variant` should rank the same", baseline, related(variant).map { it.address })
         }
+    }
+
+
+    @Test
+    fun `finds a sender whose id is one character short`() {
+        val brands = listOf(
+            "AD-SWIGGY", "VM-SWGGY", "AX-ZOMATO", "AD-PAYTMBNK", "AX-AMZNPAY",
+            "VM-FLPKTBNK", "AD-NYKAAIN", "AX-MYNTRA", "VM-BIGBASK", "AD-JIOMART",
+        )
+        val brandIndex = SenderIndex(brands)
+        val results = brandIndex.rank("SWIGGY", brands)
+
+        val typo = results.firstOrNull { it.address == "VM-SWGGY" }
+        assertTrue("SWGGY should be found as a typo of SWIGGY, got ${results.map { it.address }}", typo != null)
+        assertEquals(MatchReason.TYPO, typo!!.reason)
+        assertEquals("one character missing", typo.evidence)
+    }
+
+    @Test
+    fun `handles insertion, substitution and transposition`() {
+        assertEquals(1, TypoMatching.distance("SWIGGYX", "SWIGGY"))   // extra character
+        assertEquals(1, TypoMatching.distance("SWAGGY", "SWIGGY"))    // substitution
+        assertEquals(1, TypoMatching.distance("SWGIGY", "SWIGGY"))    // adjacent swap
+
+        assertEquals("one character extra", TypoMatching.description("SWIGGY", "SWIGGYX"))
+        assertEquals("one character different", TypoMatching.description("SWIGGY", "SWAGGY"))
+        assertEquals("two characters swapped", TypoMatching.description("SWIGGY", "SWGIGY"))
+        assertEquals("one character missing", TypoMatching.description("SWIGGY", "SWGGY"))
+    }
+
+    @Test
+    fun `short ids get no typo tolerance`() {
+        // SBIB and SBIC are four characters: one difference is a different id, not a typo
+        assertEquals(0, TypoMatching.allowedTypos("SBIB".length))
+        assertEquals(1, TypoMatching.allowedTypos("SWIGGY".length))
+        assertEquals(2, TypoMatching.allowedTypos("HDFCBANKING".length))
+        assertEquals(3, TypoMatching.allowedTypos("ICICIBANKLIMITED".length))
+
+        val codes = listOf("AD-SBIB", "AX-SBIC", "VM-SBIX", "TM-SBID")
+        val results = SenderIndex(codes).rank("AD-SBIB", codes)
+        assertTrue(
+            "a four-character id may be related, but never as a typo",
+            results.none { it.reason == MatchReason.TYPO }
+        )
+    }
+
+    @Test
+    fun `similarly spelled but unrelated long ids are not typos`() {
+        // three changes in eleven characters is under the count limit but over the share limit
+        val similarity = TypoMatching.similarity("HDFCBANKING", "ICICIBANKIN")
+        assertTrue("similarity was $similarity", similarity < 0.70)
+        assertNull(TypoMatching.description("SWIGGY", "SWIGGY"))
+    }
+
+    @Test
+    fun `typo evidence and shared-run evidence are separate reasons`() {
+        val mixed = listOf("AD-SWIGGY", "VM-SWGGY", "AX-SWIGGYHYD", "AD-ZOMATO")
+        val results = SenderIndex(mixed).rank("SWIGGY", mixed)
+
+        val typo = results.first { it.address == "VM-SWGGY" }
+        val run = results.first { it.address == "AX-SWIGGYHYD" }
+        assertEquals(MatchReason.TYPO, typo.reason)
+        assertNotEquals(MatchReason.TYPO, run.reason)
+        assertTrue("a typo should not outrank a verbatim containment", typo.score < run.score)
     }
 
     @Test

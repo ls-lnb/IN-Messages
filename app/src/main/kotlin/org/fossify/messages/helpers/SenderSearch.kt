@@ -18,7 +18,7 @@ class SenderSearch(
      * the picker was opened from. Related senders therefore lead, but nothing is pushed into a
      * separate block that could be skipped.
      */
-    fun order(source: List<ShortCodeSender>): Pair<List<ShortCodeSender>, Map<String, String>> {
+    fun order(source: List<ShortCodeSender>): Pair<List<ShortCodeSender>, Map<String, SenderMatch>> {
         val anchor = seedAddress
         if (index == null || anchor.isNullOrBlank()) {
             return source.sortedBy { it.address.uppercase() } to emptyMap()
@@ -31,10 +31,10 @@ class SenderSearch(
     }
 
     /** The shared run behind each inferred match, so a row can explain why it is listed. */
-    private fun evidenceOf(ranked: List<SenderMatch>): Map<String, String> {
+    private fun evidenceOf(ranked: List<SenderMatch>): Map<String, SenderMatch> {
         return ranked
             .filter { !it.direct && it.relevant && it.evidence.isNotEmpty() }
-            .associate { it.address.uppercase() to it.evidence }
+            .associateBy { it.address.uppercase() }
     }
 
     /**
@@ -45,7 +45,7 @@ class SenderSearch(
         source: List<ShortCodeSender>,
         query: String,
         groupTitles: Map<String, String>,
-    ): Pair<List<ShortCodeSender>, Map<String, String>> {
+    ): Pair<List<ShortCodeSender>, Map<String, SenderMatch>> {
         val byAddress = source.associateBy { it.address.uppercase() }
         if (index == null) {
             val simple = source.filter { sender ->
