@@ -176,8 +176,9 @@ class SenderPickerActivity : SimpleActivity() {
         val filtered: List<ShortCodeSender>
         val matches: Map<String, String>
         if (query.isEmpty()) {
-            filtered = SenderSearch(senderIndex, seedAddress).order(source)
-            matches = emptyMap()
+            val ordered = SenderSearch(senderIndex, seedAddress).order(source)
+            filtered = ordered.first
+            matches = ordered.second
         } else {
             val search = SenderSearch(senderIndex, seedAddress).search(source, query, groupTitles)
             filtered = search.first

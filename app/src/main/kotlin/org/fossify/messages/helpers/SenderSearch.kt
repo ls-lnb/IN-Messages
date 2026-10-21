@@ -18,15 +18,23 @@ class SenderSearch(
      * the picker was opened from. Related senders therefore lead, but nothing is pushed into a
      * separate block that could be skipped.
      */
-    fun order(source: List<ShortCodeSender>): List<ShortCodeSender> {
+    fun order(source: List<ShortCodeSender>): Pair<List<ShortCodeSender>, Map<String, String>> {
         val anchor = seedAddress
         if (index == null || anchor.isNullOrBlank()) {
-            return source.sortedBy { it.address.uppercase() }
+            return source.sortedBy { it.address.uppercase() } to emptyMap()
         }
 
+        val ranked = index!!.order(anchor, source.map { it.address })
         val byAddress = source.associateBy { it.address.uppercase() }
-        return index!!.order(anchor, source.map { it.address })
-            .mapNotNull { byAddress[it.address.uppercase()] }
+        val ordered = ranked.mapNotNull { byAddress[it.address.uppercase()] }
+        return ordered to evidenceOf(ranked)
+    }
+
+    /** The shared run behind each inferred match, so a row can explain why it is listed. */
+    private fun evidenceOf(ranked: List<SenderMatch>): Map<String, String> {
+        return ranked
+            .filter { !it.direct && it.relevant && it.evidence.isNotEmpty() }
+            .associate { it.address.uppercase() to it.evidence }
     }
 
     /**
@@ -50,9 +58,7 @@ class SenderSearch(
 
         val ranked = index!!.rank(query, source.map { it.address })
         val related = ranked.mapNotNull { byAddress[it.address.uppercase()] }
-        val evidence = ranked
-            .filter { !it.direct && it.relevant && it.evidence.isNotEmpty() }
-            .associate { it.address.uppercase() to it.evidence }
+        val evidence = evidenceOf(ranked)
         val textOnly = source.filter { sender ->
             sender !in related && (
                 sender.snippet.contains(query, true) ||

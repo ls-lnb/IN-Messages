@@ -62,9 +62,10 @@ class SenderPickerAdapter(
                 text = if (evidence.isNullOrEmpty()) {
                     base
                 } else {
-                    listOf(base, activity.getString(R.string.related_sender_match, evidence))
-                        .filter { it.isNotBlank() }
-                        .joinToString(" · ")
+                    listOf(
+                        activity.getString(R.string.related_sender_match, evidence),
+                        base,
+                    ).filter { it.isNotBlank() }.joinToString(" · ")
                 }
                 setTextColor(textColor)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * DETAILS_SCALE)
