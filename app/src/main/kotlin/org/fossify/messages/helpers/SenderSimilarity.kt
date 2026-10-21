@@ -221,6 +221,26 @@ class SenderIndex(addresses: Collection<String>) {
         /** Fewer confident matches than this and the list is padded from the rest. */
         private const val MIN_CONFIDENT_RESULTS = 2
 
+        /**
+         * Words that appear in a large share of sender ids and identify nothing on their own:
+         * every bank puts BANK in a code, every wallet puts PAY. A run made only of one of these
+         * is not evidence, however rare it happens to look in a small corpus.
+         *
+         * Add to this list rather than special-casing a sender anywhere else. Keep entries
+         * generic - a brand name here would suppress the very matches it should find.
+         */
+        private val GENERIC_WORDS = setOf(
+            "ALERT", "ATM", "BALANCE", "BANK", "BILL", "BNK", "CARD", "CASH", "CODE",
+            "CREDIT", "DEBIT", "INFO", "LIMIT", "LOGIN", "MSG", "NEWS", "NOTICE", "OFFER",
+            "OTP", "PAY", "PIN", "PROMO", "SALE", "SERVICE", "SMS", "SUPPORT", "TXN",
+            "UPDATE", "UPI", "VERIFY", "WALLET",
+        )
+
+        /** True when [run] is generic filler: a fragment of one of the words above. */
+        fun isGeneric(run: String): Boolean {
+            return GENERIC_WORDS.any { word -> word.contains(run) }
+        }
+
         private val SEPARATORS = Regex("[^A-Z0-9]")
 
         /**
@@ -247,6 +267,7 @@ class SenderIndex(addresses: Collection<String>) {
         fun grams(value: String): Set<String> {
             return segments(value)
                 .flatMap { segment -> segmentGrams(segment) }
+                .filterNot { gram -> isGeneric(gram) }
                 .toSet()
         }
 
@@ -280,6 +301,7 @@ class SenderIndex(addresses: Collection<String>) {
         fun longestCommonSubstring(first: String, second: String): String {
             return segments(first)
                 .flatMap { left -> segments(second).map { right -> commonRun(left, right) } }
+                .filterNot { run -> isGeneric(run) }
                 .maxByOrNull { it.length }
                 .orEmpty()
         }

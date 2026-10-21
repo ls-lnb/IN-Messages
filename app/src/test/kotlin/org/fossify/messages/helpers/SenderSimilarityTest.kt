@@ -140,6 +140,31 @@ class SenderSimilarityTest {
     }
 
     @Test
+    fun `generic words like PAY and BANK do not relate two senders`() {
+        val wallets = listOf(
+            "AD-AMZNPAY", "AX-HPPAY", "VM-GPAYIND", "TM-PHONEPE", "AX-PAYTMUPI",
+            "AD-HDFCBANK", "AX-ICICIBANK", "VM-SBIBANK", "TM-KOTAKBANK",
+            "AX-AMZNPRIM", "VM-AMZNIND", "AD-AMZNFRSH",
+        )
+        val walletIndex = SenderIndex(wallets)
+
+        val amazon = walletIndex.rank("AD-AMZNPAY", wallets).map { it.address }
+        assertFalse("HPPAY shares only PAY, got $amazon", "AX-HPPAY" in amazon)
+        assertFalse("GPAY shares only PAY, got $amazon", "VM-GPAYIND" in amazon)
+        assertTrue("AMZNPRIM is the same brand, got $amazon", "AX-AMZNPRIM" in amazon)
+
+        val bank = walletIndex.rank("AD-HDFCBANK", wallets).map { it.address }
+        assertFalse("ICICI must not follow HDFC just for BANK, got $bank", "AX-ICICIBANK" in bank)
+        assertFalse("SBI must not follow HDFC just for BANK, got $bank", "VM-SBIBANK" in bank)
+
+        // the list is consulted, not guessed
+        assertTrue(SenderIndex.isGeneric("PAY"))
+        assertTrue(SenderIndex.isGeneric("ANK"))
+        assertFalse(SenderIndex.isGeneric("SBI"))
+        assertFalse(SenderIndex.isGeneric("HDFC"))
+    }
+
+    @Test
     fun `separators are boundaries, so no gram straddles one`() {
         // the reason VM-CAMS used to match on 'VMC': that gram was read across the hyphen
         assertEquals(setOf("CAM", "AMS"), SenderIndex.grams("VM-CAMS"))
@@ -273,7 +298,8 @@ class SenderSimilarityTest {
     fun `normalization keeps the comparison form stable`() {
         assertEquals("TXSBIBNK", SenderIndex.normalize("tx-sbi bnk"))
         assertEquals("", SenderIndex.normalize("   "))
-        assertEquals(setOf("TXS", "XSB", "SBI", "BIB", "IBN", "BNK"), SenderIndex.grams("TXSBIBNK"))
+        // BNK is on the generic list, so only the identifying grams survive
+        assertEquals(setOf("TXS", "XSB", "SBI", "BIB", "IBN"), SenderIndex.grams("TXSBIBNK"))
         assertTrue(SenderIndex.grams("TX").isEmpty())
     }
 
