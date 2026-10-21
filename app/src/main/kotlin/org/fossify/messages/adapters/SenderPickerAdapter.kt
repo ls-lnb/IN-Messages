@@ -14,6 +14,7 @@ import org.fossify.commons.extensions.getTextSize
 import org.fossify.messages.R
 import org.fossify.messages.activities.SimpleActivity
 import org.fossify.messages.databinding.ItemSenderPickerBinding
+import org.fossify.messages.databinding.ItemSenderPickerFooterBinding
 import org.fossify.messages.models.ShortCodeSender
 
 class SenderPickerAdapter(
@@ -22,7 +23,7 @@ class SenderPickerAdapter(
     var groupTitles: Map<String, String>,
     var matches: Map<String, String> = emptyMap(),
     private val onSelectionChanged: () -> Unit,
-) : RecyclerView.Adapter<SenderPickerAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val textColor = activity.getProperTextColor()
     private val primaryColor = activity.getProperPrimaryColor()
     private val fontSize = activity.getTextSize()
@@ -31,6 +32,21 @@ class SenderPickerAdapter(
             field = value
             notifyDataSetChanged()
         }
+
+    /** Closing note after the last row; null when the list should end with a sender. */
+    var footerText: String? = null
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
+
+    inner class FooterHolder(private val binding: ItemSenderPickerFooterBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(text: String) {
+            binding.senderPickerFooter.text = text
+            binding.senderPickerFooter.setTextColor(textColor)
+        }
+    }
 
     private fun relatedText(evidence: String, preview: String): CharSequence {
         val reason = activity.getString(R.string.related_sender_match, evidence)
@@ -57,18 +73,30 @@ class SenderPickerAdapter(
     private companion object {
         const val ADDRESS_SCALE = 1.1f
         const val DETAILS_SCALE = 0.85f
+        const val TYPE_SENDER = 0
+        const val TYPE_FOOTER = 1
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemSenderPickerBinding.inflate(activity.layoutInflater, parent, false)
-        return ViewHolder(binding)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType == TYPE_FOOTER) {
+            FooterHolder(ItemSenderPickerFooterBinding.inflate(activity.layoutInflater, parent, false))
+        } else {
+            ViewHolder(ItemSenderPickerBinding.inflate(activity.layoutInflater, parent, false))
+        }
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(senders[position])
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder) {
+            is FooterHolder -> holder.bind(footerText.orEmpty())
+            is ViewHolder -> holder.bind(senders[position])
+        }
     }
 
-    override fun getItemCount() = senders.size
+    override fun getItemViewType(position: Int): Int {
+        return if (position == senders.size) TYPE_FOOTER else TYPE_SENDER
+    }
+
+    override fun getItemCount() = senders.size + if (footerText == null) 0 else 1
 
     inner class ViewHolder(private val binding: ItemSenderPickerBinding) :
         RecyclerView.ViewHolder(binding.root) {

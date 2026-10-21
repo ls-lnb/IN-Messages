@@ -188,6 +188,7 @@ class SenderPickerActivity : SimpleActivity() {
         // the grouped tab shows message snippets instead of repeating the group name
         adapter?.groupTitles = if (inGroupTab) emptyMap() else groupTitles
         adapter?.matches = matches
+        adapter?.footerText = if (inGroupTab) null else getString(R.string.sender_search_footer)
         adapter?.senders = ArrayList(filtered)
         binding.senderPickerPlaceholder.beVisibleIf(filtered.isEmpty())
         binding.senderPickerList.beVisibleIf(filtered.isNotEmpty())
