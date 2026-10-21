@@ -145,6 +145,34 @@
             </RelativeLayout>
 
             <RelativeLayout
+                android:id="@+id/colors_swap_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/colors_swap"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="@string/swap_text_and_background" />
+
+            </RelativeLayout>
+
+            <org.fossify.commons.views.MyTextView
+                android:id="@+id/colors_swap_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:alpha="0.7"
+                android:paddingStart="@dimen/activity_margin"
+                android:paddingTop="@dimen/small_margin"
+                android:paddingEnd="@dimen/activity_margin"
+                android:text="@string/swap_text_and_background_hint"
+                android:textSize="@dimen/normal_text_size"
+                tools:ignore="MissingPrefix" />
+
+            <RelativeLayout
                 android:id="@+id/colors_reset_holder"
                 style="@style/SettingsHolderTextViewOneLinerStyle"
                 android:layout_width="match_parent"

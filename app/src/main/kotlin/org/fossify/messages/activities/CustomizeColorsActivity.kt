@@ -1,7 +1,6 @@
 package org.fossify.messages.activities
 
 import android.os.Bundle
-import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperBackgroundColor
@@ -46,6 +45,7 @@ class CustomizeColorsActivity : SimpleActivity() {
 
     private companion object {
         const val DISABLED_ROW_ALPHA = 0.6f
+        const val HINT_ALPHA = 0.7f
         const val MIN_READABLE_CONTRAST = 3.0
     }
 
@@ -76,6 +76,7 @@ class CustomizeColorsActivity : SimpleActivity() {
                 keepPairReadable(pickedBackground = true)
             }
         }
+        binding.colorsSwapHolder.setOnClickListener { swapTextAndBackground() }
         binding.colorsIconHolder.setOnClickListener {
             // one strip and no shades: only the launcher's own colours are valid
             runCatching {
@@ -107,15 +108,29 @@ class CustomizeColorsActivity : SimpleActivity() {
      * launcher icon is deliberately untouched: it is not one of these colours and does not follow
      * the system theme either, so it has its own section on the screen.
      */
+    /**
+     * Flips text and background, which is the quickest way between a light and a dark screen.
+     * The resolved colours are used rather than the stored ones, so this also works while a
+     * colour is still unset, and the pair stays exactly as readable as it was.
+     */
+    private fun swapTextAndBackground() {
+        val text = getProperTextColor()
+        val background = getProperBackgroundColor()
+        config.textColor = background
+        config.backgroundColor = text
+        toast(R.string.colors_swapped)
+        recreate()
+    }
+
     private fun resetColors() {
         applyDefaultColors()
         recreate()
     }
 
     private fun applyDefaultColors() {
-        config.primaryColor = defaultColor(org.fossify.commons.R.color.default_primary_color)
-        config.textColor = defaultColor(org.fossify.commons.R.color.default_text_color)
-        config.backgroundColor = defaultColor(org.fossify.commons.R.color.default_background_color)
+        config.primaryColor = ContextCompat.getColor(this, org.fossify.commons.R.color.default_primary_color)
+        config.textColor = ContextCompat.getColor(this, org.fossify.commons.R.color.default_text_color)
+        config.backgroundColor = ContextCompat.getColor(this, org.fossify.commons.R.color.default_background_color)
     }
 
     /** 0 is what an earlier version of the reset action wrote, and it renders as transparent. */
@@ -124,10 +139,6 @@ class CustomizeColorsActivity : SimpleActivity() {
             applyDefaultColors()
             updateColors()
         }
-    }
-
-    private fun defaultColor(@ColorRes resId: Int): Int {
-        return ContextCompat.getColor(this, resId)
     }
 
     private fun setupSystemThemeRow() {
@@ -174,16 +185,16 @@ class CustomizeColorsActivity : SimpleActivity() {
 
         if (pickedBackground) {
             config.textColor = if (isLightColor(config.backgroundColor)) {
-                defaultColor(org.fossify.commons.R.color.dark_grey)
+                ContextCompat.getColor(this, org.fossify.commons.R.color.dark_grey)
             } else {
-                defaultColor(org.fossify.commons.R.color.theme_dark_text_color)
+                ContextCompat.getColor(this, org.fossify.commons.R.color.theme_dark_text_color)
             }
             toast(R.string.text_color_matched_to_background)
         } else {
             config.backgroundColor = if (isLightColor(config.textColor)) {
-                defaultColor(org.fossify.commons.R.color.theme_dark_background_color)
+                ContextCompat.getColor(this, org.fossify.commons.R.color.theme_dark_background_color)
             } else {
-                defaultColor(org.fossify.commons.R.color.theme_light_background_color)
+                ContextCompat.getColor(this, org.fossify.commons.R.color.theme_light_background_color)
             }
             toast(R.string.background_color_matched_to_text)
         }
@@ -209,6 +220,9 @@ class CustomizeColorsActivity : SimpleActivity() {
             row.isEnabled = canPick
             row.alpha = if (canPick) 1f else DISABLED_ROW_ALPHA
         }
+        binding.colorsSwapHolder.isEnabled = canPick
+        binding.colorsSwapHolder.alpha = if (canPick) 1f else DISABLED_ROW_ALPHA
+        binding.colorsSwapHint.alpha = if (canPick) HINT_ALPHA else DISABLED_ROW_ALPHA
         binding.colorsResetHolder.isEnabled = canPick
         binding.colorsResetHolder.alpha = if (canPick) 1f else DISABLED_ROW_ALPHA
     }
