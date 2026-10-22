@@ -250,7 +250,7 @@ class SenderIndex(addresses: Collection<String>) {
          */
         private val GENERIC_WORDS = setOf(
             "ALERT", "ATM", "BALANCE", "BANK", "BILL", "BNK", "CARD", "CASH", "CODE",
-            "CRD", "CREDIT", "DEBIT", "INFO", "LIMIT", "LOGIN", "MSG", "NEWS", "NOTICE",
+            "CRD", "CREDIT", "DEBIT", "IND", "INFO", "LIMIT", "LOGIN", "MSG", "NEWS", "NOTICE",
             "OFFER",
             "OTP", "PAY", "PIN", "PROMO", "SALE", "SERVICE", "SMS", "SUPPORT", "TXN",
             "UPDATE", "UPI", "VERIFY", "WALLET",
