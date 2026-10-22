@@ -2,4 +2,7 @@
 <resources>
     <!-- Default launcher icon colour: Material blue 500, matching @mipmap/ic_launcher. -->
     <color name="default_app_icon_color">#FF2196F3</color>
+    <!-- Neutral icon used where the system draws the app itself: notifications, recents, task
+         switcher. Mid-tone so the white mark reads on both a light and a dark surface. -->
+    <color name="notification_icon_color">#FF546E7A</color>
 </resources>
