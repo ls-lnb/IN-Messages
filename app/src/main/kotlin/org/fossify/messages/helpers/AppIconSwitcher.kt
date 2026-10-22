@@ -52,6 +52,26 @@ class AppIconSwitcher(private val context: Context) {
         context.config.appIconColor = variant.color
     }
 
+    /**
+     * Cycles the enabled alias off and back on, which is a component state change the system
+     * reacts to. Some ROMs keep the package icon they first read - SystemUI then draws that stale
+     * bitmap in notifications until a reboot - and this is the only lever an app has to make it
+     * look again.
+     */
+    fun refresh() {
+        val variant = current()
+        manager.setComponentEnabledSetting(
+            component(variant),
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            PackageManager.DONT_KILL_APP
+        )
+        manager.setComponentEnabledSetting(
+            component(variant),
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            PackageManager.DONT_KILL_APP
+        )
+    }
+
     /** The launcher icon for [variant], used as the preview in the app icon picker. */
     fun iconDrawable(variant: AppIconVariant = current()): Drawable? {
         val name = if (variant == defaultAppIconVariant) {

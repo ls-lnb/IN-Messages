@@ -16,6 +16,7 @@ import org.fossify.commons.extensions.hasPermission
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.helpers.PERMISSION_READ_CONTACTS
 import org.fossify.commons.helpers.ensureBackgroundThread
+import org.fossify.messages.BuildConfig
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.dismissOpenToolbarPopups
 import org.fossify.messages.helpers.AppIconSwitcher
@@ -48,7 +49,13 @@ class App : FossifyApp() {
         // The notification accent is derived, not a separate choice. Reading it from the icon that
         // is actually on the launcher stops an install carried over from an older default from
         // tinting notifications with a colour the app no longer uses.
-        config.appIconColor = AppIconSwitcher(this).current().color
+        val iconSwitcher = AppIconSwitcher(this)
+        config.appIconColor = iconSwitcher.current().color
+        // an update can leave the system drawing the icon it cached from the previous build
+        if (config.lastIconCacheBust != BuildConfig.VERSION_CODE) {
+            config.lastIconCacheBust = BuildConfig.VERSION_CODE
+            runCatching { iconSwitcher.refresh() }
+        }
         if (hasPermission(PERMISSION_READ_CONTACTS)) {
             listOf(
                 ContactsContract.Contacts.CONTENT_URI,
