@@ -1,10 +1,12 @@
 package org.fossify.messages.activities
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import com.google.android.material.tabs.TabLayout
 import org.fossify.commons.dialogs.ConfirmationDialog
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperPrimaryColor
+import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.hideKeyboard
 import org.fossify.commons.extensions.onTextChangeListener
 import org.fossify.commons.extensions.toast
@@ -40,12 +42,14 @@ class SenderPickerActivity : SimpleActivity() {
     private var currentQuery = ""
     private var seedAddress: String? = null
     private var senderIndex: SenderIndex? = null
+    private var updatingSelectAllBox = false
     private var currentTab = TAB_SEARCH_SENDERS
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         setupOptionsMenu()
+        setupSelectAllBox()
         setupEdgeToEdge(padBottomImeAndSystem = listOf(binding.senderPickerList))
         setupMaterialScrollListener(
             scrollingView = binding.senderPickerList,
@@ -101,11 +105,6 @@ class SenderPickerActivity : SimpleActivity() {
         binding.senderPickerToolbar.inflateMenu(R.menu.menu_sender_picker)
         binding.senderPickerToolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.select_all_senders -> {
-                    selectAllVisible()
-                    true
-                }
-
                 R.id.confirm_group_senders -> {
                     confirmSelection()
                     true
@@ -205,41 +204,64 @@ class SenderPickerActivity : SimpleActivity() {
         }
     }
 
-    /**
-     * Ticks every sender currently listed - the suggestions, or whatever the search narrowed it
-     * to. Bulk selection is convenient and easy to regret, so a long list asks first.
-     */
-    private fun selectAllVisible() {
-        val pending = adapter?.senders.orEmpty()
-            .filterNot { selectedAddresses.contains(it.address.uppercase()) }
-        if (pending.isEmpty()) {
-            toast(R.string.all_senders_already_selected)
-            return
-        }
-
-        val select: (List<ShortCodeSender>) -> Unit = { senders ->
-            senders.forEach { selectedAddresses.add(it.address.uppercase()) }
-            adapter?.notifyDataSetChanged()
-            updateSelectedCount()
-        }
-
-        if (pending.size <= BULK_SELECTION_WARNING) {
-            select(pending)
-        } else {
-            ConfirmationDialog(
-                activity = this,
-                message = getString(R.string.select_all_confirmation, pending.size),
-                positive = org.fossify.commons.R.string.yes,
-                negative = org.fossify.commons.R.string.no,
-            ) { select(pending) }
-        }
-    }
-
     private fun updateSelectedCount() {
         binding.senderPickerSelectedCount.text = getString(
             R.string.selected_senders_count,
             selectedAddresses.size
         )
+
+        // the box is ticked exactly when everything currently listed is selected
+        val visible = adapter?.senders.orEmpty()
+        val selectedVisible = visible.count { selectedAddresses.contains(it.address.uppercase()) }
+        updatingSelectAllBox = true
+        binding.senderPickerSelectAll.isChecked =
+            visible.isNotEmpty() && selectedVisible == visible.size
+        updatingSelectAllBox = false
+    }
+
+    /**
+     * Ticks or clears every sender currently listed - the suggestions, or whatever the search
+     * narrowed it to. Bulk selection is convenient and easy to regret, so a long list asks first.
+     */
+    private fun setupSelectAllBox() {
+        binding.senderPickerSelectAll.buttonTintList = ColorStateList.valueOf(getProperPrimaryColor())
+        binding.senderPickerSelectAll.setTextColor(getProperTextColor())
+        binding.senderPickerSelectAll.setOnCheckedChangeListener { _, checked ->
+            if (updatingSelectAllBox) {
+                return@setOnCheckedChangeListener
+            }
+
+            if (!checked) {
+                adapter?.senders.orEmpty().forEach {
+                    selectedAddresses.remove(it.address.uppercase())
+                }
+                adapter?.notifyDataSetChanged()
+                updateSelectedCount()
+                return@setOnCheckedChangeListener
+            }
+
+            val pending = adapter?.senders.orEmpty()
+                .filterNot { selectedAddresses.contains(it.address.uppercase()) }
+            val select: (List<ShortCodeSender>) -> Unit = { senders ->
+                senders.forEach { selectedAddresses.add(it.address.uppercase()) }
+                adapter?.notifyDataSetChanged()
+                updateSelectedCount()
+            }
+
+            when {
+                pending.isEmpty() -> updateSelectedCount()
+                pending.size <= BULK_SELECTION_WARNING -> select(pending)
+                else -> {
+                    ConfirmationDialog(
+                        activity = this,
+                        message = getString(R.string.select_all_confirmation, pending.size),
+                        positive = org.fossify.commons.R.string.yes,
+                        negative = org.fossify.commons.R.string.no,
+                    ) { select(pending) }
+                    updateSelectedCount()
+                }
+            }
+        }
     }
 
     private fun confirmSelection() {

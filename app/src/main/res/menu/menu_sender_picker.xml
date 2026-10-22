@@ -8,8 +8,4 @@
         android:icon="@drawable/ic_check_double_vector"
         android:title="@string/group_senders"
         app:showAsAction="always" />
-    <item
-        android:id="@+id/select_all_senders"
-        android:title="@string/select_all"
-        app:showAsAction="never" />
 </menu>
