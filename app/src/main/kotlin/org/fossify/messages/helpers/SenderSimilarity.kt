@@ -249,7 +249,7 @@ class SenderIndex(addresses: Collection<String>) {
          * generic - a brand name here would suppress the very matches it should find.
          */
         private val GENERIC_WORDS = setOf(
-            "ALERT", "ATM", "BALANCE", "BANK", "BILL", "BNK", "CARD", "CASH", "CODE",
+            "ALERT", "AMC", "ATM", "BALANCE", "BANK", "BILL", "BNK", "CARD", "CASH", "CODE",
             "CRD", "CREDIT", "DEBIT", "IND", "INFO", "LIMIT", "LOGIN", "MSG", "NEWS", "NOTICE",
             "OFFER",
             "OTP", "PAY", "PIN", "PROMO", "SALE", "SERVICE", "SMS", "SUPPORT", "TXN",

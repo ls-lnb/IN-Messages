@@ -244,6 +244,14 @@ class SenderSimilarityTest {
         assertFalse("GPAY shares only PAY, got $amazon", "VM-GPAYIND" in amazon)
         assertTrue("AMZNPRIM is the same brand, got $amazon", "AX-AMZNPRIM" in amazon)
 
+        val funds = listOf("AX-HDFCAMC", "VM-SBIAMC", "AD-ICICIAMC", "TM-NIPPONAMC", "AX-HDFCMF")
+        val fundResults = SenderIndex(funds).rank("AX-HDFCAMC", funds).map { it.address }
+        assertFalse(
+            "AMC alone must not relate two fund houses, got $fundResults",
+            fundResults.any { it == "VM-SBIAMC" || it == "AD-ICICIAMC" }
+        )
+        assertTrue("the house itself still matches", "AX-HDFCMF" in fundResults)
+
         val india = listOf("AX-AMZNIND", "VM-ZOMATOIND", "AD-FLPKTIND", "TM-MYNTRAIND", "AX-INDIGO6E")
         val indiaResults = SenderIndex(india).rank("AX-AMZNIND", india).map { it.address }
         assertFalse(
@@ -268,6 +276,7 @@ class SenderSimilarityTest {
         assertTrue("CARD and its abbreviation CRD are filler", SenderIndex.isGeneric("CRD"))
         assertTrue(SenderIndex.isGeneric("CAR"))
         assertTrue("the country suffix is filler too", SenderIndex.isGeneric("IND"))
+        assertTrue("AMC names a service, not a company", SenderIndex.isGeneric("AMC"))
         assertTrue(SenderIndex.isGeneric("ANK"))
         assertFalse(SenderIndex.isGeneric("SBI"))
         assertFalse(SenderIndex.isGeneric("HDFC"))
