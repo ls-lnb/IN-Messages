@@ -18,6 +18,7 @@ import org.fossify.commons.helpers.PERMISSION_READ_CONTACTS
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.dismissOpenToolbarPopups
+import org.fossify.messages.helpers.AppIconSwitcher
 import org.fossify.messages.helpers.GoogleBackup
 import org.fossify.messages.extensions.rescheduleAllScheduledMessages
 import org.fossify.messages.helpers.APP_SIDELOADING_STATUS_OK
@@ -44,6 +45,10 @@ class App : FossifyApp() {
         // corrupt version and send the user to Fossify's download page. Marking the build as
         // verified short-circuits that check, in the splash screen and everywhere else.
         config.appSideloadingStatus = APP_SIDELOADING_STATUS_OK
+        // The notification accent is derived, not a separate choice. Reading it from the icon that
+        // is actually on the launcher stops an install carried over from an older default from
+        // tinting notifications with a colour the app no longer uses.
+        config.appIconColor = AppIconSwitcher(this).current().color
         if (hasPermission(PERMISSION_READ_CONTACTS)) {
             listOf(
                 ContactsContract.Contacts.CONTENT_URI,
