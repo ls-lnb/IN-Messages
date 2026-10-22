@@ -7,7 +7,9 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
 import android.graphics.drawable.LayerDrawable
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.provider.Telephony
 import android.text.TextUtils
 import androidx.appcompat.content.res.AppCompatResources
@@ -31,6 +33,7 @@ import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.hideKeyboard
 import org.fossify.commons.extensions.openNotificationSettings
+import org.fossify.commons.dialogs.ConfirmationDialog
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.underlineText
 import org.fossify.commons.extensions.updateTextColors
@@ -212,8 +215,28 @@ class MainActivity : SimpleActivity() {
             if (resultCode == RESULT_OK) {
                 askPermissions()
             } else {
-                finish()
+                showSmsRoleRefusedDialog()
             }
+        }
+    }
+
+    /**
+     * Some ROMs will not hand the SMS role to an app installed from outside a store until the user
+     * lifts the restriction in App info. Closing on a refusal left the app looking broken, so say
+     * what happened and offer to open that screen.
+     */
+    private fun showSmsRoleRefusedDialog() {
+        ConfirmationDialog(
+            activity = this,
+            message = getString(R.string.sms_role_refused),
+            positive = R.string.open_app_settings,
+            negative = org.fossify.commons.R.string.cancel,
+        ) {
+            startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.fromParts("package", packageName, null))
+            )
+            finish()
         }
     }
 

@@ -52,6 +52,8 @@
     <string name="swap_text_and_background">Swap text and background</string>
     <string name="swap_text_and_background_hint">Flips the two colors, the quickest way between a light and a dark screen. The pair stays just as readable.</string>
     <string name="colors_swapped">Text and background colors swapped</string>
+    <string name="sms_role_refused">Android did not let IN Messages become your SMS app, so there is nothing to show yet. If the app was installed from outside a store, some devices require you to allow it first in the app\'s info page, under permissions or restrictions. Open the settings, allow SMS, then start the app again.</string>
+    <string name="open_app_settings">Open app settings</string>
     <string name="app_icon_color">App icon color</string>
     <string name="detect_otp_codes">Detect one time passwords</string>
     <string name="otp_keywords">OTP keywords</string>
@@ -68,6 +70,10 @@
     <string name="otp_code">OTP: %s</string>
     <string name="copy_otp_code">Copy code</string>
     <string name="search_senders">Search senders</string>
+    <string name="sender_search_hint">Search any sender or message</string>
+    <string name="sender_search_footer">Looking for more senders? Type any code to search them all.</string>
+    <string name="select_all_confirmation">Select all %1$d senders? Grouping this many at once is easy to get wrong, so please make sure you reviewed them.</string>
+    <string name="all_senders_already_selected">Everything in this list is already selected</string>
     <string name="no_short_code_senders">No short-code senders found</string>
     <string name="sender_group_saved">Group saved</string>
     <string name="select_at_least_two_senders">Select at least two senders</string>
@@ -201,6 +207,7 @@
     <string name="about_support_email_address">inmessages@blinkingblue.com</string>
     <string name="about_github">GitHub</string>
     <string name="about_licenses">Third-party licenses</string>
+    <string name="related_sender_match">matches %s</string>
     <string name="google_backup">Back up to Google account</string>
     <string name="google_backup_hint">Off by default, and only settings travel: sender groups, colours and OTP keywords are copied into Android\'s own backup so a reinstall on the same account can restore them. Messages are not included. Use Export for those.</string>
     <string name="settings_restored_from_backup">Settings restored from the Android backup</string>

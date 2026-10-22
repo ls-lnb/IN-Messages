@@ -20,6 +20,7 @@ import android.provider.Telephony.Threads
 import android.provider.Telephony.ThreadsColumns
 import android.telephony.SubscriptionManager
 import android.text.TextUtils
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -1757,7 +1758,9 @@ fun Context.getExportTimestamp(): String {
 }
 
 fun Context.getNotificationColor(): Int {
-    return config.appIconColor.takeIf { it != 0 } ?: getProperPrimaryColor()
+    // deliberately not the launcher colour: notifications draw the application icon, and the
+    // picker only swaps a launcher alias, so following it here would only ever be a stale guess
+    return ContextCompat.getColor(this, R.color.notification_icon_color)
 }
 
 fun Context.shouldUnarchive(): Boolean {

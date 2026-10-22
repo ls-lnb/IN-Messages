@@ -41,7 +41,7 @@
             android:layout_marginStart="@dimen/activity_margin"
             android:layout_marginEnd="@dimen/activity_margin"
             android:background="@android:color/transparent"
-            android:hint="@string/search_senders"
+            android:hint="@string/sender_search_hint"
             android:inputType="text"
             android:minHeight="@dimen/normal_icon_size"
             android:textSize="@dimen/big_text_size" />
