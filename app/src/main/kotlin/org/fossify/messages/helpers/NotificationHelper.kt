@@ -175,6 +175,9 @@ class NotificationHelper(private val context: Context) {
             if (otpCode != null) {
                 setSubText(context.getString(R.string.otp_code, otpCode))
             }
+            // keeps Android from adding its own code and smart-reply chips beside ours; there is
+            // no per-chip styling, so one owner of the chips is the only way to avoid a clash
+            setAllowSystemGeneratedContextualActions(false)
             priority = NotificationCompat.PRIORITY_MAX
             setDefaults(Notification.DEFAULT_LIGHTS)
             setCategory(Notification.CATEGORY_MESSAGE)
@@ -197,9 +200,11 @@ class NotificationHelper(private val context: Context) {
                 copyOtpIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
+            // labelled with the code itself, so it reads like the system's own suggestion while
+            // being the one we extracted from this message
             builder.addAction(
                 org.fossify.commons.R.drawable.ic_copy_vector,
-                context.getString(R.string.copy_otp_code),
+                otpCode,
                 copyOtpPendingIntent
             )
         }
