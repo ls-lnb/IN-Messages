@@ -244,12 +244,22 @@ class SenderSimilarityTest {
         assertFalse("GPAY shares only PAY, got $amazon", "VM-GPAYIND" in amazon)
         assertTrue("AMZNPRIM is the same brand, got $amazon", "AX-AMZNPRIM" in amazon)
 
+        val cards = listOf("AX-AXISCRD", "VM-HDFCCRD", "AD-ICICICRD", "TM-KOTAKCRD", "AX-AXISCREDIT")
+        val cardIndex = SenderIndex(cards)
+        val cardResults = cardIndex.rank("AX-AXISCRD", cards).map { it.address }
+        assertFalse(
+            "CRD alone must not relate one bank's card line to another's, got $cardResults",
+            cardResults.any { it == "VM-HDFCCRD" || it == "AD-ICICICRD" }
+        )
+
         val bank = walletIndex.rank("AD-HDFCBANK", wallets).map { it.address }
         assertFalse("ICICI must not follow HDFC just for BANK, got $bank", "AX-ICICIBANK" in bank)
         assertFalse("SBI must not follow HDFC just for BANK, got $bank", "VM-SBIBANK" in bank)
 
         // the list is consulted, not guessed
         assertTrue(SenderIndex.isGeneric("PAY"))
+        assertTrue("CARD and its abbreviation CRD are filler", SenderIndex.isGeneric("CRD"))
+        assertTrue(SenderIndex.isGeneric("CAR"))
         assertTrue(SenderIndex.isGeneric("ANK"))
         assertFalse(SenderIndex.isGeneric("SBI"))
         assertFalse(SenderIndex.isGeneric("HDFC"))
