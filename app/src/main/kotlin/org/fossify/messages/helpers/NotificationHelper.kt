@@ -28,7 +28,6 @@ import org.fossify.messages.extensions.shortcutHelper
 import org.fossify.messages.messaging.isShortCodeWithLetters
 import org.fossify.messages.models.SenderGroup
 import org.fossify.messages.receivers.DeleteSmsReceiver
-import org.fossify.messages.receivers.CopyOtpReceiver
 import org.fossify.messages.receivers.DirectReplyReceiver
 import org.fossify.messages.receivers.MarkAsReadReceiver
 
@@ -175,9 +174,6 @@ class NotificationHelper(private val context: Context) {
             if (otpCode != null) {
                 setSubText(context.getString(R.string.otp_code, otpCode))
             }
-            // keeps Android from adding its own code and smart-reply chips beside ours; there is
-            // no per-chip styling, so one owner of the chips is the only way to avoid a clash
-            setAllowSystemGeneratedContextualActions(false)
             priority = NotificationCompat.PRIORITY_MAX
             setDefaults(Notification.DEFAULT_LIGHTS)
             setCategory(Notification.CATEGORY_MESSAGE)
@@ -190,25 +186,9 @@ class NotificationHelper(private val context: Context) {
             builder.addAction(replyAction)
         }
 
-        if (otpCode != null) {
-            val copyOtpIntent = Intent(context, CopyOtpReceiver::class.java).apply {
-                putExtra(OTP_CODE, otpCode)
-            }
-            val copyOtpPendingIntent = PendingIntent.getBroadcast(
-                context,
-                notificationId,
-                copyOtpIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            // labelled with the code itself, so it reads like the system's own suggestion while
-            // being the one we extracted from this message
-            builder.addAction(
-                org.fossify.commons.R.drawable.ic_copy_vector,
-                otpCode,
-                copyOtpPendingIntent
-            )
-        }
-
+        // No copy action of our own: app actions render as plain text on some ROMs, while a
+        // code offered as a contextual action gets a proper chip. The code is still in the
+        // notification text and in the subtext, and long pressing it in the thread copies it.
         builder.addAction(
             org.fossify.commons.R.drawable.ic_check_vector,
             context.getString(R.string.mark_as_read),
