@@ -181,4 +181,20 @@ class OtpDetectorTest {
         assertNull("OTP 12345678901".extractOtpCode())
         assertNull("Your OTP is 123".extractOtpCode())
     }
+
+    @Test
+    fun `detects a bare PIN phrase`() {
+        assertEquals("6543", "PIN is 6543 . Test.".extractOtpCode())
+        assertEquals("65432", "PIN is 65432. Test.".extractOtpCode())
+        assertEquals("654321", "PIN is 654321. Test.".extractOtpCode())
+        assertEquals("654321", "PIN is 654321 . Test.".extractOtpCode())
+        assertEquals("4821", "Your PIN: 4821".extractOtpCode())
+    }
+
+    @Test
+    fun `does not treat a postal PIN code as a password`() {
+        assertNull("PIN code 400001".extractOtpCode())
+        assertNull("Pincode: 400001".extractOtpCode())
+        assertNull("Postal PIN code 400001".extractOtpCode())
+    }
 }
