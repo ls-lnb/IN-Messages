@@ -23,6 +23,7 @@ import org.fossify.messages.R
 import org.fossify.messages.activities.ThreadActivity
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.getNotificationColor
+import org.fossify.messages.receivers.CopyOtpReceiver
 import org.fossify.messages.extensions.findSenderGroup
 import org.fossify.messages.extensions.shortcutHelper
 import org.fossify.messages.messaging.isShortCodeWithLetters
@@ -186,9 +187,26 @@ class NotificationHelper(private val context: Context) {
             builder.addAction(replyAction)
         }
 
-        // No copy action of our own: app actions render as plain text on some ROMs, while a
-        // code offered as a contextual action gets a proper chip. The code is still in the
-        // notification text and in the subtext, and long pressing it in the thread copies it.
+        // Our own copy action, labelled rather than showing the bare code: app actions render as
+        // plain text on some ROMs, where a lone number reads like a stray word. The system may add
+        // a chip of its own beside it; this one is always present.
+        if (otpCode != null) {
+            val copyOtpIntent = Intent(context, CopyOtpReceiver::class.java).apply {
+                putExtra(OTP_CODE, otpCode)
+            }
+            val copyOtpPendingIntent = PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                copyOtpIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(
+                org.fossify.commons.R.drawable.ic_copy_vector,
+                context.getString(R.string.copy_otp_code),
+                copyOtpPendingIntent
+            )
+        }
+
         builder.addAction(
             org.fossify.commons.R.drawable.ic_check_vector,
             context.getString(R.string.mark_as_read),
