@@ -16,8 +16,10 @@ import org.fossify.commons.extensions.hasPermission
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.helpers.PERMISSION_READ_CONTACTS
 import org.fossify.commons.helpers.ensureBackgroundThread
+import org.fossify.messages.BuildConfig
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.dismissOpenToolbarPopups
+import org.fossify.messages.helpers.AppIconSwitcher
 import org.fossify.messages.helpers.GoogleBackup
 import org.fossify.messages.extensions.rescheduleAllScheduledMessages
 import org.fossify.messages.helpers.APP_SIDELOADING_STATUS_OK
@@ -27,6 +29,10 @@ class App : FossifyApp() {
     private companion object {
         const val CRASH_TAG = "MessagesCrash"
     }
+
+    /** Crash messages already shown this session, so a repeated failure is not a wall of toasts. */
+    private val announcedCrashes = HashSet<String>()
+
     override val isAppLockFeatureAvailable = true
 
     override fun onCreate() {
@@ -40,6 +46,16 @@ class App : FossifyApp() {
         // corrupt version and send the user to Fossify's download page. Marking the build as
         // verified short-circuits that check, in the splash screen and everywhere else.
         config.appSideloadingStatus = APP_SIDELOADING_STATUS_OK
+        // The notification accent is derived, not a separate choice. Reading it from the icon that
+        // is actually on the launcher stops an install carried over from an older default from
+        // tinting notifications with a colour the app no longer uses.
+        val iconSwitcher = AppIconSwitcher(this)
+        config.appIconColor = iconSwitcher.current().color
+        // an update can leave the system drawing the icon it cached from the previous build
+        if (config.lastIconCacheBust != BuildConfig.VERSION_CODE) {
+            config.lastIconCacheBust = BuildConfig.VERSION_CODE
+            runCatching { iconSwitcher.refresh() }
+        }
         if (hasPermission(PERMISSION_READ_CONTACTS)) {
             listOf(
                 ContactsContract.Contacts.CONTENT_URI,
@@ -86,9 +102,22 @@ class App : FossifyApp() {
             val detail = "${throwable.javaClass.name}: ${throwable.message}"
             Log.e(CRASH_TAG, detail, throwable)
             runCatching { writeCrashReport(detail, throwable) }
-            Handler(Looper.getMainLooper()).post { toast(detail, Toast.LENGTH_LONG) }
+            announceOnce(detail)
             previous?.uncaughtException(thread, throwable)
         }
+    }
+
+    /**
+     * A crash on a background thread kills only that thread, so the app carries on and the next
+     * task fails the same way: on a device that restricts SMS access, the same exception arrives
+     * several times in a row. The report is written every time, but the user is told once.
+     */
+    private fun announceOnce(detail: String) {
+        if (!announcedCrashes.add(detail)) {
+            return
+        }
+
+        Handler(Looper.getMainLooper()).post { toast(detail, Toast.LENGTH_LONG) }
     }
 
     private fun writeCrashReport(detail: String, throwable: Throwable) {

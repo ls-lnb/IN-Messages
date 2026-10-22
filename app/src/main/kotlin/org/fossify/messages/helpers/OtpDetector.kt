@@ -18,6 +18,8 @@ val otpBuiltInKeywords = listOf(
     "o.t.p",
     "one time password",
     "one time pin",
+    "pin",
+    "pin is",
     "one time passcode",
     "one time code",
     "verification code",
@@ -157,7 +159,10 @@ private object OtpKeywordPatterns {
  */
 fun String.extractOtpCode(extraKeywords: Collection<String> = emptyList()): String? {
     val keywordRegex = OtpKeywordPatterns.keywordRegex(extraKeywords)
-    val keywords = keywordRegex.findAll(this).map { it.range }.toList()
+    val keywords = keywordRegex.findAll(this)
+        .filterNot { isPostalCodePin(it) }
+        .map { it.range }
+        .toList()
     if (keywords.isEmpty()) {
         return null
     }
@@ -166,6 +171,20 @@ fun String.extractOtpCode(extraKeywords: Collection<String> = emptyList()): Stri
     // Digits are tried first: in bank messages a mixed token near a phrase is usually a reference
     // (an order or UTR number), so it only gets a chance when no numeric code fits.
     return findOtpCode(otpNumberRegex, keywords) ?: findOtpCode(otpAlphanumericRegex, keywords)
+}
+
+/**
+ * "PIN code" and "pincode" name a postal code, not a credential, so those occurrences must not
+ * turn the six digits that follow into a one time password.
+ */
+private fun CharSequence.isPostalCodePin(match: MatchResult): Boolean {
+    val word = match.value.replace(OTP_WORD_SEPARATOR.toRegex(), "")
+    if (!word.equals("pin", ignoreCase = true)) {
+        return false
+    }
+
+    val rest = substring(match.range.last + 1, length).trimStart(' ', '\t', '-', '.', ':')
+    return rest.startsWith("code", ignoreCase = true)
 }
 
 /** The 4-8 digit or 4-10 character token closest to one of [keywords], or null. */

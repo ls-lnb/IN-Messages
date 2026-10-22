@@ -23,4 +23,7 @@
     <string name="text_color_matched_to_background">Text colour matched the background so it stays readable</string>
     <string name="background_color_matched_to_text">Background colour matched the text so it stays readable</string>
     <string name="about_licenses">Third-party licences</string>
+    <string name="swap_text_and_background">Swap text and background</string>
+    <string name="swap_text_and_background_hint">Flips the two colours, the quickest way between a light and a dark screen. The pair stays just as readable.</string>
+    <string name="colors_swapped">Text and background colours swapped</string>
 </resources>

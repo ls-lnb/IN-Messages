@@ -1,9 +1,12 @@
 package org.fossify.messages.activities
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import com.google.android.material.tabs.TabLayout
+import org.fossify.commons.dialogs.ConfirmationDialog
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperPrimaryColor
+import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.hideKeyboard
 import org.fossify.commons.extensions.onTextChangeListener
 import org.fossify.commons.extensions.toast
@@ -22,6 +25,9 @@ import org.fossify.messages.extensions.similarShortCodeKey
 import org.fossify.messages.helpers.PRESELECTED_SENDER_ADDRESSES
 import org.fossify.messages.helpers.SIMILAR_SEED_ADDRESS
 import org.fossify.messages.helpers.refreshConversations
+import org.fossify.messages.helpers.SenderIndex
+import org.fossify.messages.helpers.SenderMatch
+import org.fossify.messages.helpers.SenderSearch
 import org.fossify.messages.models.ShortCodeSender
 
 class SenderPickerActivity : SimpleActivity() {
@@ -34,13 +40,16 @@ class SenderPickerActivity : SimpleActivity() {
     private var groupTitles = emptyMap<String, String>()
     private var adapter: SenderPickerAdapter? = null
     private var currentQuery = ""
-    private var similarKey: String? = null
+    private var seedAddress: String? = null
+    private var senderIndex: SenderIndex? = null
+    private var updatingSelectAllBox = false
     private var currentTab = TAB_SEARCH_SENDERS
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         setupOptionsMenu()
+        setupSelectAllBox()
         setupEdgeToEdge(padBottomImeAndSystem = listOf(binding.senderPickerList))
         setupMaterialScrollListener(
             scrollingView = binding.senderPickerList,
@@ -53,7 +62,7 @@ class SenderPickerActivity : SimpleActivity() {
                 selectedAddresses.addAll(it)
                 memberAddresses.addAll(it)
             }
-        similarKey = intent.getStringExtra(SIMILAR_SEED_ADDRESS)?.similarShortCodeKey()
+        seedAddress = intent.getStringExtra(SIMILAR_SEED_ADDRESS)
 
         // show the group name in the header when editing an existing group
         memberAddresses.firstNotNullOfOrNull { config.findSenderGroupByAddress(it) }?.let { group ->
@@ -124,31 +133,32 @@ class SenderPickerActivity : SimpleActivity() {
                         snippet = snippets[address.uppercase()].orEmpty()
                     )
                 }
+                // the provider can report the same sender in different casing, which would
+                // otherwise show up as two identical rows
+                .distinctBy { it.address.uppercase() }
                 .sortedWith(
                     compareBy<ShortCodeSender> {
                         it.address.similarShortCodeKey() ?: it.address.uppercase()
                     }.thenBy { it.address.uppercase() }
                 )
 
+            senderIndex = SenderIndex(senders.map { it.address })
+
             runOnUiThread {
                 binding.senderPickerProgress.hide()
                 allSenders = ArrayList(senders)
                 groupTitles = buildGroupTitles()
-                setupAdapter()
+                adapter = SenderPickerAdapter(
+                    activity = this,
+                    selectedAddresses = selectedAddresses,
+                    groupTitles = groupTitles,
+                    onSelectionChanged = { updateSelectedCount() }
+                )
+                binding.senderPickerList.adapter = adapter
                 showFilteredSenders()
                 updateSelectedCount()
             }
         }
-    }
-
-    private fun setupAdapter() {
-        adapter = SenderPickerAdapter(
-            activity = this,
-            selectedAddresses = selectedAddresses,
-            groupTitles = groupTitles,
-            onSelectionChanged = { updateSelectedCount() }
-        )
-        binding.senderPickerList.adapter = adapter
     }
 
     private fun showFilteredSenders() {
@@ -164,25 +174,27 @@ class SenderPickerActivity : SimpleActivity() {
                         .thenBy { it.address.uppercase() }
                 )
         } else {
-            allSenders
-                .filterNot { memberAddresses.contains(it.address.uppercase()) }
-                // senders similar to the one the picker was opened from float to the top
-                .sortedBy { if (similarKey != null && it.address.similarShortCodeKey() == similarKey) 0 else 1 }
+            allSenders.filterNot { memberAddresses.contains(it.address.uppercase()) }
         }
 
-        val query = currentQuery.trim().uppercase()
-        val filtered = ArrayList(
-            source.filter {
-                query.isEmpty() ||
-                    it.address.uppercase().contains(query) ||
-                    it.snippet.uppercase().contains(query) ||
-                    groupTitles[it.address.uppercase()].orEmpty().uppercase().contains(query)
-            }
-        )
+        val query = currentQuery.trim()
+        val filtered: List<ShortCodeSender>
+        val matches: Map<String, SenderMatch>
+        if (query.isEmpty()) {
+            val ordered = SenderSearch(senderIndex, seedAddress).order(source)
+            filtered = ordered.first
+            matches = ordered.second
+        } else {
+            val search = SenderSearch(senderIndex, seedAddress).search(source, query, groupTitles)
+            filtered = search.first
+            matches = search.second
+        }
 
         // the grouped tab shows message snippets instead of repeating the group name
         adapter?.groupTitles = if (inGroupTab) emptyMap() else groupTitles
-        adapter?.senders = filtered
+        adapter?.matches = matches
+        adapter?.footerText = if (inGroupTab) null else getString(R.string.sender_search_footer)
+        adapter?.senders = ArrayList(filtered)
         binding.senderPickerPlaceholder.beVisibleIf(filtered.isEmpty())
         binding.senderPickerList.beVisibleIf(filtered.isNotEmpty())
         if (allSenders.isEmpty()) {
@@ -197,6 +209,59 @@ class SenderPickerActivity : SimpleActivity() {
             R.string.selected_senders_count,
             selectedAddresses.size
         )
+
+        // the box is ticked exactly when everything currently listed is selected
+        val visible = adapter?.senders.orEmpty()
+        val selectedVisible = visible.count { selectedAddresses.contains(it.address.uppercase()) }
+        updatingSelectAllBox = true
+        binding.senderPickerSelectAll.isChecked =
+            visible.isNotEmpty() && selectedVisible == visible.size
+        updatingSelectAllBox = false
+    }
+
+    /**
+     * Ticks or clears every sender currently listed - the suggestions, or whatever the search
+     * narrowed it to. Bulk selection is convenient and easy to regret, so a long list asks first.
+     */
+    private fun setupSelectAllBox() {
+        binding.senderPickerSelectAll.buttonTintList = ColorStateList.valueOf(getProperPrimaryColor())
+        binding.senderPickerSelectAll.setTextColor(getProperTextColor())
+        binding.senderPickerSelectAll.setOnCheckedChangeListener { _, checked ->
+            if (updatingSelectAllBox) {
+                return@setOnCheckedChangeListener
+            }
+
+            if (!checked) {
+                adapter?.senders.orEmpty().forEach {
+                    selectedAddresses.remove(it.address.uppercase())
+                }
+                adapter?.notifyDataSetChanged()
+                updateSelectedCount()
+                return@setOnCheckedChangeListener
+            }
+
+            val pending = adapter?.senders.orEmpty()
+                .filterNot { selectedAddresses.contains(it.address.uppercase()) }
+            val select: (List<ShortCodeSender>) -> Unit = { senders ->
+                senders.forEach { selectedAddresses.add(it.address.uppercase()) }
+                adapter?.notifyDataSetChanged()
+                updateSelectedCount()
+            }
+
+            when {
+                pending.isEmpty() -> updateSelectedCount()
+                pending.size <= BULK_SELECTION_WARNING -> select(pending)
+                else -> {
+                    ConfirmationDialog(
+                        activity = this,
+                        message = getString(R.string.select_all_confirmation, pending.size),
+                        positive = org.fossify.commons.R.string.yes,
+                        negative = org.fossify.commons.R.string.no,
+                    ) { select(pending) }
+                    updateSelectedCount()
+                }
+            }
+        }
     }
 
     private fun confirmSelection() {
@@ -213,7 +278,9 @@ class SenderPickerActivity : SimpleActivity() {
         if (anchorGroup != null) {
             applySelection(title = anchorGroup.title, preferredGroupId = anchorGroup.id)
         } else {
-            val prefilledName = similarKey ?: selectedAddresses.first()
+            val prefilledName = SenderIndex.sharedRun(selectedAddresses)
+                ?: seedAddress?.similarShortCodeKey()
+                ?: selectedAddresses.first()
             GroupSendersDialog(this, prefilledName) { name ->
                 applySelection(title = name, preferredGroupId = null)
             }
@@ -254,6 +321,9 @@ class SenderPickerActivity : SimpleActivity() {
     }
 
     private companion object {
+        /** Above this many senders, selecting them all asks for confirmation first. */
+        const val BULK_SELECTION_WARNING = 20
+
         const val TAB_SEARCH_SENDERS = 0
         const val TAB_GROUPED_SENDERS = 1
     }

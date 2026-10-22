@@ -23,12 +23,12 @@ import org.fossify.messages.R
 import org.fossify.messages.activities.ThreadActivity
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.getNotificationColor
+import org.fossify.messages.receivers.CopyOtpReceiver
 import org.fossify.messages.extensions.findSenderGroup
 import org.fossify.messages.extensions.shortcutHelper
 import org.fossify.messages.messaging.isShortCodeWithLetters
 import org.fossify.messages.models.SenderGroup
 import org.fossify.messages.receivers.DeleteSmsReceiver
-import org.fossify.messages.receivers.CopyOtpReceiver
 import org.fossify.messages.receivers.DirectReplyReceiver
 import org.fossify.messages.receivers.MarkAsReadReceiver
 
@@ -187,6 +187,9 @@ class NotificationHelper(private val context: Context) {
             builder.addAction(replyAction)
         }
 
+        // Our own copy action, labelled rather than showing the bare code: app actions render as
+        // plain text on some ROMs, where a lone number reads like a stray word. The system may add
+        // a chip of its own beside it; this one is always present.
         if (otpCode != null) {
             val copyOtpIntent = Intent(context, CopyOtpReceiver::class.java).apply {
                 putExtra(OTP_CODE, otpCode)

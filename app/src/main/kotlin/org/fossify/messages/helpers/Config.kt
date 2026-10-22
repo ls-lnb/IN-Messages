@@ -140,6 +140,11 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getInt(SOFT_KEYBOARD_HEIGHT, context.getDefaultKeyboardHeight())
         set(keyboardHeight) = prefs.edit().putInt(SOFT_KEYBOARD_HEIGHT, keyboardHeight).apply()
 
+    /** Version code whose icon cache has already been busted, so it happens once per update. */
+    var lastIconCacheBust: Int
+        get() = prefs.getInt("last_icon_cache_bust", 0)
+        set(value) = prefs.edit().putInt("last_icon_cache_bust", value).apply()
+
     var useRecycleBin: Boolean
         get() = prefs.getBoolean(USE_RECYCLE_BIN, false)
         set(useRecycleBin) = prefs.edit().putBoolean(USE_RECYCLE_BIN, useRecycleBin).apply()
