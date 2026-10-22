@@ -27,6 +27,10 @@ class App : FossifyApp() {
     private companion object {
         const val CRASH_TAG = "MessagesCrash"
     }
+
+    /** Crash messages already shown this session, so a repeated failure is not a wall of toasts. */
+    private val announcedCrashes = HashSet<String>()
+
     override val isAppLockFeatureAvailable = true
 
     override fun onCreate() {
@@ -86,9 +90,22 @@ class App : FossifyApp() {
             val detail = "${throwable.javaClass.name}: ${throwable.message}"
             Log.e(CRASH_TAG, detail, throwable)
             runCatching { writeCrashReport(detail, throwable) }
-            Handler(Looper.getMainLooper()).post { toast(detail, Toast.LENGTH_LONG) }
+            announceOnce(detail)
             previous?.uncaughtException(thread, throwable)
         }
+    }
+
+    /**
+     * A crash on a background thread kills only that thread, so the app carries on and the next
+     * task fails the same way: on a device that restricts SMS access, the same exception arrives
+     * several times in a row. The report is written every time, but the user is told once.
+     */
+    private fun announceOnce(detail: String) {
+        if (!announcedCrashes.add(detail)) {
+            return
+        }
+
+        Handler(Looper.getMainLooper()).post { toast(detail, Toast.LENGTH_LONG) }
     }
 
     private fun writeCrashReport(detail: String, throwable: Throwable) {
