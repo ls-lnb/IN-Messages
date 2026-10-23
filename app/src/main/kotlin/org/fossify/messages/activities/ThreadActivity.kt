@@ -11,6 +11,7 @@ import android.content.res.ColorStateList
 import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
+import androidx.appcompat.widget.Toolbar
 import android.text.style.ForegroundColorSpan
 import android.text.Spanned
 import android.text.SpannableString
@@ -1327,20 +1328,29 @@ class ThreadActivity : SimpleActivity() {
     }
 
     private fun showGroupHintDots() {
-        val dot = GradientDrawable().apply {
-            shape = GradientDrawable.OVAL
-            setColor(getProperPrimaryColor())
-            setSize(DOT_SIZE_DP, DOT_SIZE_DP)
-        }
-        val overflow = AppCompatResources.getDrawable(this, org.fossify.commons.R.drawable.ic_three_dots_vector)
-        if (overflow != null) {
-            val layers = LayerDrawable(arrayOf(overflow, dot))
-            layers.setLayerInset(1, DOT_INSET_LEFT_DP, DOT_INSET_TOP_DP, DOT_INSET_RIGHT_DP, DOT_INSET_BOTTOM_DP)
-            binding.threadToolbar.overflowIcon = layers
+        // a small view over the toolbar rather than a modified overflow icon: the drawable would
+        // be tinted by the toolbar and scaled to the icon, which is how the dot grew into a blob
+        val toolbar = binding.threadToolbar
+        if (toolbar.findViewWithTag<View>(GROUP_HINT_DOT_TAG) == null) {
+            val density = resources.displayMetrics.density
+            val dot = View(this).apply {
+                tag = GROUP_HINT_DOT_TAG
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(getProperPrimaryColor())
+                }
+            }
+            val size = (DOT_SIZE_DP * density).toInt()
+            val params = Toolbar.LayoutParams(size, size).apply {
+                gravity = Gravity.TOP or Gravity.END
+                topMargin = (DOT_MARGIN_TOP_DP * density).toInt()
+                rightMargin = (DOT_MARGIN_END_DP * density).toInt()
+            }
+            toolbar.addView(dot, params)
         }
 
-        binding.threadToolbar.menu.findItem(R.id.group_senders)?.let { item ->
-            val original = item.title?.toString().orEmpty()
+        toolbar.menu.findItem(R.id.group_senders)?.let { item ->
+            val original = item.title?.toString().orEmpty().removePrefix("● ")
             val marked = SpannableString("● $original")
             marked.setSpan(
                 ForegroundColorSpan(getProperPrimaryColor()),
@@ -1354,7 +1364,9 @@ class ThreadActivity : SimpleActivity() {
 
     /** The hint has served its purpose once the menu entry is used. */
     private fun clearGroupHintDots() {
-        binding.threadToolbar.overflowIcon = null
+        binding.threadToolbar.findViewWithTag<View>(GROUP_HINT_DOT_TAG)?.let {
+            binding.threadToolbar.removeView(it)
+        }
         binding.threadToolbar.menu.findItem(R.id.group_senders)?.let { item ->
             val title = item.title?.toString().orEmpty().removePrefix("● ")
             item.title = title
@@ -2635,11 +2647,10 @@ class ThreadActivity : SimpleActivity() {
         /** The banner names these many senders, then says how many more there are. */
         private const val NAMES_IN_BANNER = 2
 
-        /** Size and placement of the group hint dot drawn over the overflow button. */
-        private const val DOT_SIZE_DP = 8
-        private const val DOT_INSET_LEFT_DP = 22
-        private const val DOT_INSET_TOP_DP = 2
-        private const val DOT_INSET_RIGHT_DP = 2
-        private const val DOT_INSET_BOTTOM_DP = 22
+        /** Size and placement of the group hint dot, as a small view over the overflow button. */
+        private const val DOT_SIZE_DP = 4
+        private const val DOT_MARGIN_TOP_DP = 8
+        private const val DOT_MARGIN_END_DP = 8
+        private const val GROUP_HINT_DOT_TAG = "group_hint_dot"
     }
 }
