@@ -11,6 +11,10 @@ import android.content.res.ColorStateList
 import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.text.style.ForegroundColorSpan
+import android.text.Spanned
+import android.text.SpannableString
+import android.graphics.drawable.GradientDrawable
 import android.provider.ContactsContract
 import android.provider.DocumentsContract
 import android.provider.MediaStore
@@ -438,7 +442,10 @@ class ThreadActivity : SimpleActivity() {
             R.id.archive -> archiveConversation()
             R.id.unarchive -> unarchiveConversation()
             R.id.rename_conversation -> renameConversation()
-            R.id.group_senders -> openSenderPicker()
+            R.id.group_senders -> {
+                clearGroupHintDots()
+                openSenderPicker()
+            }
             R.id.add_to_group -> showAddToGroupDialog()
             R.id.search_grouped_messages -> openGroupedSearch()
             R.id.ungroup_senders -> askConfirmUngroupSenders()
@@ -1302,6 +1309,55 @@ class ThreadActivity : SimpleActivity() {
         binding.threadGroupSuggestionClose.setOnClickListener {
             config.similarSenderBannerDismissed = config.similarSenderBannerDismissed + 1
             hideSimilarSenderSuggestion()
+            markGroupHint(seed)
+        }
+    }
+
+    /**
+     * After the banner has been waved away, point at where the feature lives: a dot on the
+     * overflow button, and the same dot on its entry once the menu is open. Once per sender.
+     */
+    private fun markGroupHint(address: String) {
+        if (config.groupHintSenders.contains(address.uppercase())) {
+            return
+        }
+
+        config.groupHintSenders = config.groupHintSenders + address.uppercase()
+        showGroupHintDots()
+    }
+
+    private fun showGroupHintDots() {
+        val dot = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(getProperPrimaryColor())
+            setSize(DOT_SIZE_DP, DOT_SIZE_DP)
+        }
+        val overflow = AppCompatResources.getDrawable(this, org.fossify.commons.R.drawable.ic_three_dots_vector)
+        if (overflow != null) {
+            val layers = LayerDrawable(arrayOf(overflow, dot))
+            layers.setLayerInset(1, DOT_INSET_LEFT_DP, DOT_INSET_TOP_DP, DOT_INSET_RIGHT_DP, DOT_INSET_BOTTOM_DP)
+            binding.threadToolbar.overflowIcon = layers
+        }
+
+        binding.threadToolbar.menu.findItem(R.id.group_senders)?.let { item ->
+            val original = item.title?.toString().orEmpty()
+            val marked = SpannableString("● $original")
+            marked.setSpan(
+                ForegroundColorSpan(getProperPrimaryColor()),
+                0,
+                1,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            item.title = marked
+        }
+    }
+
+    /** The hint has served its purpose once the menu entry is used. */
+    private fun clearGroupHintDots() {
+        binding.threadToolbar.overflowIcon = null
+        binding.threadToolbar.menu.findItem(R.id.group_senders)?.let { item ->
+            val title = item.title?.toString().orEmpty().removePrefix("● ")
+            item.title = title
         }
     }
 
@@ -2578,5 +2634,12 @@ class ThreadActivity : SimpleActivity() {
 
         /** The banner names these many senders, then says how many more there are. */
         private const val NAMES_IN_BANNER = 2
+
+        /** Size and placement of the group hint dot drawn over the overflow button. */
+        private const val DOT_SIZE_DP = 8
+        private const val DOT_INSET_LEFT_DP = 22
+        private const val DOT_INSET_TOP_DP = 2
+        private const val DOT_INSET_RIGHT_DP = 2
+        private const val DOT_INSET_BOTTOM_DP = 22
     }
 }

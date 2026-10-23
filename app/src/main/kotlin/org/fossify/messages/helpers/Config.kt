@@ -170,6 +170,11 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getInt("similar_sender_banner_opened", 0)
         set(value) = prefs.edit().putInt("similar_sender_banner_opened", value).apply()
 
+    /** Senders whose group hint (banner dismissal dot) has already been shown once. */
+    var groupHintSenders: Set<String>
+        get() = prefs.getStringSet("group_hint_senders", emptySet()) ?: emptySet()
+        set(value) = prefs.edit().putStringSet("group_hint_senders", value).apply()
+
     var useRecycleBin: Boolean
         get() = prefs.getBoolean(USE_RECYCLE_BIN, false)
         set(useRecycleBin) = prefs.edit().putBoolean(USE_RECYCLE_BIN, useRecycleBin).apply()
