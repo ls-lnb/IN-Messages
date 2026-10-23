@@ -1293,7 +1293,6 @@ class ThreadActivity : SimpleActivity() {
         binding.threadGroupSuggestion.setBackgroundColor(getProperBackgroundColor())
         binding.threadGroupSuggestion.beVisible()
         binding.threadGroupSuggestionDivider.beVisible()
-        binding.threadTopDivider.beVisible()
 
         binding.threadGroupSuggestion.setOnClickListener {
             config.similarSenderBannerOpened = config.similarSenderBannerOpened + 1
@@ -1309,7 +1308,6 @@ class ThreadActivity : SimpleActivity() {
     private fun hideSimilarSenderSuggestion() {
         binding.threadGroupSuggestion.beGone()
         binding.threadGroupSuggestionDivider.beGone()
-        binding.threadTopDivider.beGone()
     }
 
     private fun setupThreadTitle() {
