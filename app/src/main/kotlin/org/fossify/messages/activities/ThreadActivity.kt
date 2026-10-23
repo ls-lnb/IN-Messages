@@ -1289,6 +1289,8 @@ class ThreadActivity : SimpleActivity() {
 
         binding.threadGroupSuggestionText.text = getString(R.string.group_suggestion_message, display)
         binding.threadGroupSuggestionText.setTextColor(getProperTextColor())
+        // opaque, so nothing behind it shows through; the ripple is lost, the readability is not
+        binding.threadGroupSuggestion.setBackgroundColor(getProperBackgroundColor())
         binding.threadGroupSuggestion.beVisible()
         binding.threadGroupSuggestionDivider.beVisible()
         binding.threadTopDivider.beVisible()
