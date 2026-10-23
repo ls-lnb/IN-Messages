@@ -92,16 +92,58 @@
         android:scrollbars="none"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+        <LinearLayout
+            android:id="@+id/thread_group_suggestion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/activity_margin"
+            android:paddingTop="@dimen/medium_margin"
+            android:paddingEnd="@dimen/small_margin"
+            android:paddingBottom="@dimen/medium_margin"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible">
+
+            <org.fossify.commons.views.MyTextView
+                android:id="@+id/thread_group_suggestion_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="@dimen/normal_text_size"
+                tools:text="Found similar senders: AD-HDFCBK, VX-HDFCBK. Group them into one conversation?" />
+
+            <ImageView
+                android:id="@+id/thread_group_suggestion_close"
+                android:layout_width="@dimen/normal_icon_size"
+                android:layout_height="@dimen/normal_icon_size"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/hide"
+                android:padding="@dimen/small_margin"
+                android:src="@drawable/ic_cross_vector" />
+
+        </LinearLayout>
+
+        <include
+            android:id="@+id/thread_group_suggestion_divider"
+            layout="@layout/divider"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/thread_group_suggestion"
+            tools:visibility="visible" />
+
         <include
             layout="@layout/divider"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:id="@+id/thread_top_divider"
+            app:layout_constraintTop_toBottomOf="@id/thread_group_suggestion_divider" />
 
         <RelativeLayout
             android:id="@+id/thread_add_contacts"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/thread_top_divider"
             tools:visibility="visible">
 
             <LinearLayout

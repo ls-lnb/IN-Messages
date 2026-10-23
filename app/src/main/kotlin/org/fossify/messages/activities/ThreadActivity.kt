@@ -193,6 +193,7 @@ import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.helpers.requestTelephonySyncProgress
 import org.fossify.messages.helpers.refreshMessages
 import org.fossify.messages.helpers.sortSenderGroupsForPicker
+import org.fossify.messages.helpers.SimilarSenderSuggestions
 import org.fossify.messages.messaging.cancelScheduleSendPendingIntent
 import org.fossify.messages.messaging.isLongMmsMessage
 import org.fossify.messages.messaging.isShortCodeWithLetters
@@ -225,6 +226,8 @@ class ThreadActivity : SimpleActivity() {
     private var threadItems: List<ThreadItem> = emptyList()
     private var bus: EventBus? = null
     private var conversation: Conversation? = null
+    private var suggestionEvaluated = false
+
     private var participants = ArrayList<SimpleContact>()
     private var privateContacts = ArrayList<SimpleContact>()
     private var messages: List<Message> = emptyList()
@@ -317,6 +320,7 @@ class ThreadActivity : SimpleActivity() {
                 }
                 // resolve the group by address now that the conversation is loaded
                 cancelNotificationsFor(threadId, newConv.phoneNumber)
+                evaluateSimilarSenderSuggestion(newConv.phoneNumber)
             }
 
             val smsDraft = getSmsDraft(threadId)
@@ -1244,6 +1248,66 @@ class ThreadActivity : SimpleActivity() {
                 tooltipText = getString(org.fossify.commons.R.string.more_info)
             }
         }
+    }
+
+    /**
+     * Offers to group the senders that look like the one being read. Unrestricted for now: the
+     * settings carry a switch and a display limit for later, and the counters are recorded so a
+     * policy can be chosen from real data.
+     */
+    private fun evaluateSimilarSenderSuggestion(address: String) {
+        if (suggestionEvaluated || isRecycleBin || !config.similarSenderBannerEnabled) {
+            return
+        }
+
+        val limit = config.similarSenderBannerMaxDisplays
+        if (limit > 0 && config.similarSenderBannerShown >= limit) {
+            return
+        }
+
+        suggestionEvaluated = true
+        ensureBackgroundThread {
+            val similar = SimilarSenderSuggestions.forAddress(this, address)
+            if (similar.isEmpty()) {
+                return@ensureBackgroundThread
+            }
+
+            config.similarSenderBannerShown = config.similarSenderBannerShown + 1
+            runOnUiThread { showSimilarSenderSuggestion(address, similar) }
+        }
+    }
+
+    private fun showSimilarSenderSuggestion(seed: String, similar: List<String>) {
+        val names = similar.take(NAMES_IN_BANNER)
+        val listed = names.joinToString(", ")
+        val remaining = similar.size - names.size
+        val display = if (remaining > 0) {
+            getString(R.string.group_suggestion_more, listed, remaining)
+        } else {
+            listed
+        }
+
+        binding.threadGroupSuggestionText.text = getString(R.string.group_suggestion_message, display)
+        binding.threadGroupSuggestionText.setTextColor(getProperTextColor())
+        binding.threadGroupSuggestion.beVisible()
+        binding.threadGroupSuggestionDivider.beVisible()
+        binding.threadTopDivider.beVisible()
+
+        binding.threadGroupSuggestion.setOnClickListener {
+            config.similarSenderBannerOpened = config.similarSenderBannerOpened + 1
+            hideSimilarSenderSuggestion()
+            launchSenderPicker(preselectedAddresses = listOf(seed), seedAddress = seed)
+        }
+        binding.threadGroupSuggestionClose.setOnClickListener {
+            config.similarSenderBannerDismissed = config.similarSenderBannerDismissed + 1
+            hideSimilarSenderSuggestion()
+        }
+    }
+
+    private fun hideSimilarSenderSuggestion() {
+        binding.threadGroupSuggestion.beGone()
+        binding.threadGroupSuggestionDivider.beGone()
+        binding.threadTopDivider.beGone()
     }
 
     private fun setupThreadTitle() {
@@ -2511,5 +2575,8 @@ class ThreadActivity : SimpleActivity() {
         private const val SCROLL_TO_BOTTOM_FAB_LIMIT = 20
         private const val PREFETCH_THRESHOLD = 45
         private const val SEARCH_DEBOUNCE_MS = 250L
+
+        /** The banner names these many senders, then says how many more there are. */
+        private const val NAMES_IN_BANNER = 2
     }
 }
