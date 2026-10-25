@@ -1758,9 +1758,14 @@ fun Context.getExportTimestamp(): String {
 }
 
 fun Context.getNotificationColor(): Int {
-    // deliberately not the launcher colour: notifications draw the application icon, and the
-    // picker only swaps a launcher alias, so following it here would only ever be a stale guess
-    return ContextCompat.getColor(this, R.color.notification_icon_color)
+    // while the app follows the system colours, notifications follow the wallpaper with it -
+    // getProperPrimaryColor is the dynamic scheme then. Otherwise they keep the neutral that
+    // matches the application icon, since a picked launcher colour can never reach them.
+    return if (config.isSystemThemeEnabled) {
+        getProperPrimaryColor()
+    } else {
+        ContextCompat.getColor(this, R.color.notification_icon_color)
+    }
 }
 
 fun Context.shouldUnarchive(): Boolean {
