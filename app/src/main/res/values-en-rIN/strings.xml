@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>    <string name="customize_app_colors">Customize colours</string>
-    <string name="customize_app_colors_hint">The launcher icon uses one of its built-in colours and is not affected by the system theme or by Reset colours.</string>
+    <string name="customize_app_colors_hint">The launcher icon uses one of its built-in colours and is not affected by the system theme or by Reset colours. To have it follow your wallpaper instead, turn on themed icons in your launcher\'s settings.</string>
     <string name="follow_system_colors">Follow system colours</string>
     <string name="follow_system_colors_hint">Colours come from your wallpaper through the system theme. Turn this off to pick the colours below.</string>
     <string name="reset_colors">Reset colours</string>

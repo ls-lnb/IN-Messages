@@ -11,6 +11,11 @@ import android.content.res.ColorStateList
 import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
+import androidx.appcompat.widget.Toolbar
+import android.text.style.ForegroundColorSpan
+import android.text.Spanned
+import android.text.SpannableString
+import android.graphics.drawable.GradientDrawable
 import android.provider.ContactsContract
 import android.provider.DocumentsContract
 import android.provider.MediaStore
@@ -193,6 +198,7 @@ import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.helpers.requestTelephonySyncProgress
 import org.fossify.messages.helpers.refreshMessages
 import org.fossify.messages.helpers.sortSenderGroupsForPicker
+import org.fossify.messages.helpers.SimilarSenderSuggestions
 import org.fossify.messages.messaging.cancelScheduleSendPendingIntent
 import org.fossify.messages.messaging.isLongMmsMessage
 import org.fossify.messages.messaging.isShortCodeWithLetters
@@ -225,6 +231,8 @@ class ThreadActivity : SimpleActivity() {
     private var threadItems: List<ThreadItem> = emptyList()
     private var bus: EventBus? = null
     private var conversation: Conversation? = null
+    private var suggestionEvaluated = false
+
     private var participants = ArrayList<SimpleContact>()
     private var privateContacts = ArrayList<SimpleContact>()
     private var messages: List<Message> = emptyList()
@@ -317,6 +325,7 @@ class ThreadActivity : SimpleActivity() {
                 }
                 // resolve the group by address now that the conversation is loaded
                 cancelNotificationsFor(threadId, newConv.phoneNumber)
+                evaluateSimilarSenderSuggestion(newConv.phoneNumber)
             }
 
             val smsDraft = getSmsDraft(threadId)
@@ -434,7 +443,10 @@ class ThreadActivity : SimpleActivity() {
             R.id.archive -> archiveConversation()
             R.id.unarchive -> unarchiveConversation()
             R.id.rename_conversation -> renameConversation()
-            R.id.group_senders -> openSenderPicker()
+            R.id.group_senders -> {
+                clearGroupHintDots()
+                openSenderPicker()
+            }
             R.id.add_to_group -> showAddToGroupDialog()
             R.id.search_grouped_messages -> openGroupedSearch()
             R.id.ungroup_senders -> askConfirmUngroupSenders()
@@ -1244,6 +1256,126 @@ class ThreadActivity : SimpleActivity() {
                 tooltipText = getString(org.fossify.commons.R.string.more_info)
             }
         }
+    }
+
+    /**
+     * Offers to group the senders that look like the one being read. Unrestricted for now: the
+     * settings carry a switch and a display limit for later, and the counters are recorded so a
+     * policy can be chosen from real data.
+     */
+    private fun evaluateSimilarSenderSuggestion(address: String) {
+        if (suggestionEvaluated || isRecycleBin || !config.similarSenderBannerEnabled) {
+            return
+        }
+
+        val limit = config.similarSenderBannerMaxDisplays
+        if (limit > 0 && config.similarSenderBannerShown >= limit) {
+            return
+        }
+
+        suggestionEvaluated = true
+        ensureBackgroundThread {
+            val similar = SimilarSenderSuggestions.forAddress(this, address)
+            if (similar.isEmpty()) {
+                return@ensureBackgroundThread
+            }
+
+            config.similarSenderBannerShown = config.similarSenderBannerShown + 1
+            runOnUiThread { showSimilarSenderSuggestion(address, similar) }
+        }
+    }
+
+    private fun showSimilarSenderSuggestion(seed: String, similar: List<String>) {
+        val names = similar.take(NAMES_IN_BANNER)
+        val listed = names.joinToString(", ")
+        val remaining = similar.size - names.size
+        val display = if (remaining > 0) {
+            getString(R.string.group_suggestion_more, listed, remaining)
+        } else {
+            listed
+        }
+
+        binding.threadGroupSuggestionText.text = getString(R.string.group_suggestion_message, display)
+        binding.threadGroupSuggestionText.setTextColor(getProperTextColor())
+        // opaque, so nothing behind it shows through; the ripple is lost, the readability is not
+        binding.threadGroupSuggestion.setBackgroundColor(getProperBackgroundColor())
+        binding.threadGroupSuggestion.beVisible()
+        binding.threadGroupSuggestionDivider.beVisible()
+
+        binding.threadGroupSuggestion.setOnClickListener {
+            config.similarSenderBannerOpened = config.similarSenderBannerOpened + 1
+            hideSimilarSenderSuggestion()
+            launchSenderPicker(preselectedAddresses = listOf(seed), seedAddress = seed)
+        }
+        binding.threadGroupSuggestionClose.setOnClickListener {
+            config.similarSenderBannerDismissed = config.similarSenderBannerDismissed + 1
+            hideSimilarSenderSuggestion()
+            markGroupHint(seed)
+        }
+    }
+
+    /**
+     * After the banner has been waved away, point at where the feature lives: a dot on the
+     * overflow button, and the same dot on its entry once the menu is open. Once per sender.
+     */
+    private fun markGroupHint(address: String) {
+        if (config.groupHintSenders.contains(address.uppercase())) {
+            return
+        }
+
+        config.groupHintSenders = config.groupHintSenders + address.uppercase()
+        showGroupHintDots()
+    }
+
+    private fun showGroupHintDots() {
+        // a small view over the toolbar rather than a modified overflow icon: the drawable would
+        // be tinted by the toolbar and scaled to the icon, which is how the dot grew into a blob
+        val toolbar = binding.threadToolbar
+        if (toolbar.findViewWithTag<View>(GROUP_HINT_DOT_TAG) == null) {
+            val density = resources.displayMetrics.density
+            val dot = View(this).apply {
+                tag = GROUP_HINT_DOT_TAG
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(getProperPrimaryColor())
+                }
+            }
+            val size = (DOT_SIZE_DP * density).toInt()
+            val params = Toolbar.LayoutParams(size, size).apply {
+                gravity = Gravity.TOP or Gravity.END
+                topMargin = (DOT_MARGIN_TOP_DP * density).toInt()
+                rightMargin = (DOT_MARGIN_END_DP * density).toInt()
+            }
+            toolbar.addView(dot, params)
+        }
+
+        toolbar.menu.findItem(R.id.group_senders)?.let { item ->
+            val original = item.title?.toString().orEmpty().removePrefix("● ")
+            val marked = SpannableString("● $original")
+            marked.setSpan(
+                ForegroundColorSpan(getProperPrimaryColor()),
+                0,
+                1,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            item.title = marked
+        }
+    }
+
+    /** The hint has served its purpose once the menu entry is used. */
+    private fun clearGroupHintDots() {
+        binding.threadToolbar.findViewWithTag<View>(GROUP_HINT_DOT_TAG)?.let {
+            binding.threadToolbar.removeView(it)
+        }
+        binding.threadToolbar.menu.findItem(R.id.group_senders)?.let { item ->
+            val title = item.title?.toString().orEmpty().removePrefix("● ")
+            item.title = title
+        }
+    }
+
+    private fun hideSimilarSenderSuggestion() {
+        binding.threadGroupSuggestion.beGone()
+        binding.threadGroupSuggestionDivider.beGone()
     }
 
     private fun setupThreadTitle() {
@@ -2511,5 +2643,14 @@ class ThreadActivity : SimpleActivity() {
         private const val SCROLL_TO_BOTTOM_FAB_LIMIT = 20
         private const val PREFETCH_THRESHOLD = 45
         private const val SEARCH_DEBOUNCE_MS = 250L
+
+        /** The banner names these many senders, then says how many more there are. */
+        private const val NAMES_IN_BANNER = 2
+
+        /** Size and placement of the group hint dot, as a small view over the overflow button. */
+        private const val DOT_SIZE_DP = 4
+        private const val DOT_MARGIN_TOP_DP = 8
+        private const val DOT_MARGIN_END_DP = 8
+        private const val GROUP_HINT_DOT_TAG = "group_hint_dot"
     }
 }

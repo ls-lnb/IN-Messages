@@ -45,10 +45,13 @@
     <string name="sort_alphabetically">A-Z</string>
     <string name="sort_by_most_recent">Recent</string>
     <string name="customize_app_colors">Customize colors</string>
-    <string name="customize_app_colors_hint">The launcher icon uses one of its built-in colors and is not affected by the system theme or by Reset colors.</string>
+    <string name="customize_app_colors_hint">The launcher icon uses one of its built-in colors and is not affected by the system theme or by Reset colors. To have it follow your wallpaper instead, turn on themed icons in your launcher\'s settings.</string>
     <string name="follow_system_colors">Follow system colors</string>
     <string name="follow_system_colors_hint">Colors come from your wallpaper through the system theme. Turn this off to pick the colors below.</string>
     <string name="reset_colors">Reset colors</string>
+    <string name="group_suggestion_message">Found similar senders: %1$s. Group them into one conversation?</string>
+    <string name="group_suggestion_more">%1$s and %2$d more</string>
+    <string name="dismiss">Dismiss</string>
     <string name="swap_text_and_background">Swap text and background</string>
     <string name="swap_text_and_background_hint">Flips the two colors, the quickest way between a light and a dark screen. The pair stays just as readable.</string>
     <string name="colors_swapped">Text and background colors swapped</string>

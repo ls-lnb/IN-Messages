@@ -145,6 +145,36 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getInt("last_icon_cache_bust", 0)
         set(value) = prefs.edit().putInt("last_icon_cache_bust", value).apply()
 
+    /**
+     * The "found similar senders" banner in a short-code thread. Unrestricted for now: the
+     * counters are recorded so a limit can be introduced later without guessing at the data.
+     */
+    var similarSenderBannerEnabled: Boolean
+        get() = prefs.getBoolean("similar_sender_banner_enabled", true)
+        set(value) = prefs.edit().putBoolean("similar_sender_banner_enabled", value).apply()
+
+    /** 0 means no limit. */
+    var similarSenderBannerMaxDisplays: Int
+        get() = prefs.getInt("similar_sender_banner_max_displays", 0)
+        set(value) = prefs.edit().putInt("similar_sender_banner_max_displays", value).apply()
+
+    var similarSenderBannerShown: Int
+        get() = prefs.getInt("similar_sender_banner_shown", 0)
+        set(value) = prefs.edit().putInt("similar_sender_banner_shown", value).apply()
+
+    var similarSenderBannerDismissed: Int
+        get() = prefs.getInt("similar_sender_banner_dismissed", 0)
+        set(value) = prefs.edit().putInt("similar_sender_banner_dismissed", value).apply()
+
+    var similarSenderBannerOpened: Int
+        get() = prefs.getInt("similar_sender_banner_opened", 0)
+        set(value) = prefs.edit().putInt("similar_sender_banner_opened", value).apply()
+
+    /** Senders whose group hint (banner dismissal dot) has already been shown once. */
+    var groupHintSenders: Set<String>
+        get() = prefs.getStringSet("group_hint_senders", emptySet()) ?: emptySet()
+        set(value) = prefs.edit().putStringSet("group_hint_senders", value).apply()
+
     var useRecycleBin: Boolean
         get() = prefs.getBoolean(USE_RECYCLE_BIN, false)
         set(useRecycleBin) = prefs.edit().putBoolean(USE_RECYCLE_BIN, useRecycleBin).apply()
