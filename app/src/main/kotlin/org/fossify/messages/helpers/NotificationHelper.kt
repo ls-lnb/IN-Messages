@@ -338,6 +338,9 @@ class NotificationHelper(private val context: Context) {
             }
             if (conversationTitle != null) {
                 style.setConversationTitle(conversationTitle)
+                // without this the style treats a group whose messages have all come from one
+                // short code as a single-sender conversation and shows that code as the title
+                style.setGroupConversation(true)
             }
             val newMessage =
                 NotificationCompat.MessagingStyle.Message(messageBody, System.currentTimeMillis(), sender)
